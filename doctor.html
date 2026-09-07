@@ -7,22 +7,29 @@
 <style>
   :root{
     --rosa:#d16b96; --lila:#7c6ba8; --fondo:#f6f4fb; --card:#fff; --borde:#e6e0f0;
-    --texto:#2f2a3a; --ok:#3fa876; --alerta:#d9463c; --amarillo:#c98a1c;
+    --texto:#2f2a3a; --ok:#3fa876; --alerta:#d9463c; --amarillo:#c98a1c; --muted:#8a8296;
+  }
+  html[data-theme="dark"]{
+    --rosa:#e28ab0; --lila:#a596e0; --fondo:#1c1824; --card:#26212f; --borde:#3a3448;
+    --texto:#ece8f2; --ok:#5fce9a; --alerta:#ee7a70; --amarillo:#e0ab52; --muted:#a79fbb;
   }
   *{box-sizing:border-box;}
   body{margin:0; font-family:'Segoe UI',system-ui,sans-serif; background:var(--fondo); color:var(--texto);}
-  header{background:linear-gradient(135deg,var(--rosa),var(--lila)); color:#fff; padding:18px 24px;}
+  header{background:linear-gradient(135deg,var(--rosa),var(--lila)); color:#fff; padding:18px 24px; display:flex; justify-content:space-between; align-items:center;}
   header h1{margin:0; font-size:1.2rem;}
+  .modo-btn{width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.25); border:none; color:#fff; font-size:1.1rem; cursor:pointer;}
   .layout{display:flex; min-height:calc(100vh - 60px);}
-  .lista{width:320px; background:#fff; border-right:1px solid var(--borde); overflow-y:auto; flex:none;}
+  .lista{width:320px; background:var(--card); border-right:1px solid var(--borde); overflow-y:auto; flex:none;}
   .lista .item{padding:14px 18px; border-bottom:1px solid var(--borde); cursor:pointer;}
-  .lista .item:hover{background:#faf6fc;}
-  .lista .item.sel{background:#f1e9f7; border-left:4px solid var(--rosa);}
+  .lista .item:hover{background:var(--fondo);}
+  .lista .item.sel{background:var(--fondo); border-left:4px solid var(--rosa);}
   .lista .item b{display:block; font-size:.95rem;}
-  .lista .item .meta{font-size:.75rem; color:#8a8296;}
+  .lista .item .meta{font-size:.75rem; color:var(--muted);}
   .lista .badge{display:inline-block; font-size:.68rem; padding:2px 8px; border-radius:999px; margin-top:4px;}
   .badge.alerta{background:#fbe4e2; color:var(--alerta);}
   .badge.ok{background:#e2f4ea; color:var(--ok);}
+  html[data-theme="dark"] .badge.alerta{background:#3d2321;}
+  html[data-theme="dark"] .badge.ok{background:#1f3a2c;}
   .detalle{flex:1; padding:22px 28px; overflow-y:auto;}
   .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;}
   .box{background:var(--card); border:1px solid var(--borde); border-radius:14px; padding:16px 18px;}
@@ -32,19 +39,33 @@
   .pendiente{color:var(--amarillo); font-weight:600;}
   .hecho{color:var(--ok); font-weight:600;}
   .alarma-si{color:var(--alerta); font-weight:700;}
+  .nota{font-size:.76rem; color:var(--muted); margin-top:6px;}
   textarea#mensajeFinal{
-    width:100%; min-height:340px; font-family:'Consolas',monospace; font-size:.85rem;
+    width:100%; min-height:360px; font-family:'Consolas',monospace; font-size:.85rem;
     padding:14px; border-radius:12px; border:1.5px solid var(--borde); line-height:1.5;
+    background:var(--card); color:var(--texto);
   }
   .btn{padding:10px 18px; border:none; border-radius:10px; background:var(--rosa); color:#fff; font-weight:700; cursor:pointer; margin-top:10px;}
   .btn:active{transform:scale(.97);}
+  .btn.sec{background:var(--borde); color:var(--texto);}
   .top-ga{font-size:1.4rem; font-weight:800; color:var(--rosa);}
-  .empty{padding:60px; text-align:center; color:#a89cb5;}
+  .empty{padding:60px; text-align:center; color:var(--muted);}
   .cfg{padding:10px 24px; font-size:.8rem; background:#fff3e0; color:#8a6d3b;}
+  select.estado{padding:4px 8px; border-radius:8px; border:1px solid var(--borde); background:var(--card); color:var(--texto); font-size:.78rem;}
+  .cond-row{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--borde);}
+  .cond-row:last-child{border-bottom:none;}
+  svg.chart{width:100%; height:120px; overflow:visible;}
+  .accesos-toggle{font-size:.75rem; color:var(--muted); cursor:pointer; text-decoration:underline; margin-top:8px; display:inline-block;}
+  .fila-ga{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px;}
+  .fila-ga input{padding:8px 10px; border-radius:8px; border:1px solid var(--borde); background:var(--card); color:var(--texto); font-size:.85rem;}
+  .fila-ga .btn{margin-top:0;}
 </style>
 </head>
 <body>
-<header><h1>🩺 Panel Médico — Control Prenatal</h1></header>
+<header>
+  <h1>🩺 Panel Médico — Control Prenatal</h1>
+  <button class="modo-btn" onclick="toggleModo()" id="btnModo">🌙</button>
+</header>
 <div class="cfg" id="cfgWarn"></div>
 <div class="layout">
   <div class="lista" id="lista"><div class="empty">Cargando pacientes…</div></div>
@@ -53,7 +74,24 @@
 
 <script>
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxQ-IDYNgKZ_Ox_5RLMm8WjiMMDaE0tOLBUzf46wRmDJiW4OthlgKHE3FoVjqyixVH96A/exec";
+const SESION_HORAS = 8; // la clave se vuelve a pedir después de este tiempo de inactividad de sesión
 let consultas = [];
+
+/* ============ MODO OSCURO ============ */
+function toggleModo(){
+  const html = document.documentElement;
+  const nuevo = html.getAttribute('data-theme')==='dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', nuevo);
+  document.getElementById('btnModo').textContent = nuevo==='dark' ? '☀️' : '🌙';
+  try{ localStorage.setItem('modoOscuroDoctor', nuevo); }catch(e){}
+}
+(function initModo(){
+  let pref = null;
+  try{ pref = localStorage.getItem('modoOscuroDoctor'); }catch(e){}
+  if(!pref){ pref = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+  document.documentElement.setAttribute('data-theme', pref);
+  document.getElementById('btnModo').textContent = pref==='dark' ? '☀️' : '🌙';
+})();
 
 if(WEBAPP_URL.indexOf('PEGA_AQUI')>=0){
   document.getElementById('cfgWarn').textContent = '⚠️ Configura WEBAPP_URL en este archivo con la URL de tu Apps Script (ver Code.gs).';
@@ -61,14 +99,21 @@ if(WEBAPP_URL.indexOf('PEGA_AQUI')>=0){
   document.getElementById('cfgWarn').style.display='none';
 }
 
+/* ============ CLAVE CON EXPIRACIÓN ============ */
 function getClave(){
-  let clave = '';
-  try{ clave = localStorage.getItem('claveDoctor') || ''; }catch(e){}
-  if(!clave){
-    clave = prompt('Ingresa tu clave de acceso al panel:') || '';
-    try{ localStorage.setItem('claveDoctor', clave); }catch(e){}
+  let sesion = null;
+  try{ sesion = JSON.parse(localStorage.getItem('sesionDoctor') || 'null'); }catch(e){}
+  const ahora = Date.now();
+  if(sesion && sesion.clave && (ahora - sesion.ts) < SESION_HORAS*60*60*1000){
+    return sesion.clave;
   }
+  const clave = prompt('Ingresa tu clave de acceso al panel:') || '';
+  try{ localStorage.setItem('sesionDoctor', JSON.stringify({clave, ts: ahora})); }catch(e){}
   return clave;
+}
+function cerrarSesion(){
+  try{ localStorage.removeItem('sesionDoctor'); }catch(e){}
+  location.reload();
 }
 
 async function cargar(){
@@ -77,8 +122,8 @@ async function cargar(){
     const res = await fetch(`${WEBAPP_URL}?accion=listarConsultas&clave=${encodeURIComponent(clave)}`);
     const json = await res.json();
     if(!json.ok){
-      try{ localStorage.removeItem('claveDoctor'); }catch(e){}
-      document.getElementById('lista').innerHTML = '<div class="empty">Clave incorrecta. Recarga la página e inténtalo de nuevo.</div>';
+      try{ localStorage.removeItem('sesionDoctor'); }catch(e){}
+      document.getElementById('lista').innerHTML = '<div class="empty">Clave incorrecta. Recarga la página e inténtalo de nuevo.<br><span class="nota">Los intentos fallidos quedan registrados.</span></div>';
       return;
     }
     consultas = json.consultas || [];
@@ -95,28 +140,49 @@ function tieneAlarma(c){
 
 function pintarLista(){
   const el = document.getElementById('lista');
-  if(!consultas.length){ el.innerHTML = '<div class="empty">Aún no hay registros</div>'; return; }
-  el.innerHTML = consultas.map((c,i)=>{
-    const alarma = tieneAlarma(c);
-    return `<div class="item" onclick="verDetalle(${i})" id="item${i}">
-      <b>${c.nombre}</b>
-      <span class="meta">DNI ${c.dni} · ${c.edadGestSemanasAlIngreso}sem+${c.edadGestDiasAlIngreso}d</span>
-      <div class="badge ${alarma?'alerta':'ok'}">${alarma?'⚠ Revisar síntomas':'Sin alarma'}</div>
-    </div>`;
-  }).join('');
+  let html = '';
+  if(!consultas.length){
+    html = '<div class="empty">Aún no hay registros</div>';
+  } else {
+    html = consultas.map((c,i)=>{
+      const alarma = tieneAlarma(c);
+      return `<div class="item" onclick="verDetalle(${i})" id="item${i}">
+        <b>${c.nombre}</b>
+        <span class="meta">DNI ${c.dni} · ${c.edadGestSemanasAlIngreso}sem+${c.edadGestDiasAlIngreso}d</span>
+        <div class="badge ${alarma?'alerta':'ok'}">${alarma?'⚠ Revisar síntomas':'Sin alarma'}</div>
+      </div>`;
+    }).join('');
+  }
+  html += `<div style="padding:14px 18px"><span class="accesos-toggle" onclick="cerrarSesion()">Cerrar sesión ahora</span></div>`;
+  el.innerHTML = html;
 }
 
-function verDetalle(i){
+async function verDetalle(i){
   document.querySelectorAll('.item').forEach(e=>e.classList.remove('sel'));
   document.getElementById('item'+i).classList.add('sel');
   const c = consultas[i];
   const ga = calcularGAHoy(c);
   const rec = generarRecomendaciones(ga, c);
   const mensaje = generarMensaje(c, ga, rec);
+  let condiciones = [];
+  try{ condiciones = JSON.parse(c.condicionesJSON||'[]'); }catch(e){}
+  let labs = [];
+  try{ labs = JSON.parse(c.laboratoriosJSON||'[]'); }catch(e){}
 
   document.getElementById('detalle').innerHTML = `
-    <div class="top-ga">${c.nombre} — ${ga.semanas} sem + ${ga.dias} d <span style="font-size:.9rem;color:#8a8296">(al día de hoy)</span></div>
-    <div style="font-size:.85rem;color:#8a8296">DNI: ${c.dni} · FUM: ${c.fum}</div>
+    ${ga.sinReferencia ? `
+    <div class="top-ga">${c.nombre} <span style="font-size:.9rem;color:var(--muted)">— edad gestacional aún no registrada</span></div>
+    <div style="font-size:.85rem;color:var(--muted)">DNI: ${c.dni}</div>
+    ` : `
+    <div class="top-ga">${c.nombre} — ${ga.semanas} sem + ${ga.dias} d <span style="font-size:.9rem;color:var(--muted)">(al día de hoy)</span></div>
+    <div style="font-size:.85rem;color:var(--muted)">DNI: ${c.dni} · Ecografía de referencia: ${c.fechaEcoReferencia} (${c.semanasEcoReferencia} sem + ${c.diasEcoReferencia||0} d) · FPP: ${c.fpp || '—'}</div>
+    `}
+
+    <div class="box" style="margin-top:14px">
+      <h3>Edad gestacional de referencia</h3>
+      <p class="nota">Institucionalmente no se usa la FUM. Ingresa aquí la semana y día que tenía la paciente el día de la ecografía que consideres (habitualmente la del primer trimestre) — el sistema calcula la edad gestacional hacia adelante desde esa fecha, para esta y las próximas consultas.</p>
+      <div id="formGA">${formularioReferenciaGA(c)}</div>
+    </div>
 
     <div class="grid">
       <div class="box">
@@ -133,22 +199,32 @@ function verDetalle(i){
       </div>
 
       <div class="box">
+        <h3>Signos vitales de hoy</h3>
+        <p>Peso: <b>${c.peso || '—'} kg</b></p>
+        <p>Presión arterial: <b>${c.presionSistolica || '—'}/${c.presionDiastolica || '—'} mmHg</b></p>
+        <div id="curvas">Cargando historial…</div>
+      </div>
+
+      <div class="box">
         <h3>Ecografías institucionales</h3>
         ${sintomaLinea('Genética (11-14 sem)', c.ecoGenetica)}
         ${sintomaLinea('Morfológica (20-24 sem)', c.ecoMorfologica)}
         ${sintomaLinea('Otra previa', c.ecoPrevia)}
         ${c.ecoObservaciones? `<p><b>Obs:</b> ${c.ecoObservaciones}</p>`:''}
-        <h3 style="margin-top:14px">Laboratorios referidos</h3>
-        <p>${c.laboratorios || 'no refiere'}</p>
       </div>
 
       <div class="box">
-        <h3>Vacunas recomendadas</h3>
+        <h3>Laboratorios referidos por la paciente</h3>
+        ${labs.length ? `<ul>${labs.map(l=>`<li>${l.examen}${l.fecha?` <span class="nota">(${l.fecha})</span>`:''}</li>`).join('')}</ul>` : '<p>No refiere</p>'}
+      </div>
+
+      <div class="box">
+        <h3>Vacunas recomendadas (esquema MINSA + evidencia reciente)</h3>
         <ul>${rec.vacunas.map(v=>`<li class="${v.hecha?'hecho':'pendiente'}">${v.texto}</li>`).join('')}</ul>
       </div>
 
       <div class="box">
-        <h3>Laboratorios pendientes (según semana)</h3>
+        <h3>Laboratorios pendientes (según semana, norma MINSA-CPN)</h3>
         <ul>${rec.labs.map(v=>`<li class="pendiente">${v}</li>`).join('')}</ul>
       </div>
 
@@ -159,7 +235,19 @@ function verDetalle(i){
 
       <div class="box">
         <h3>Interconsultas</h3>
-        <ul>${rec.interconsultas.map(v=>`<li class="pendiente">${v}</li>`).join('')}</ul>
+        <div class="cond-row"><span>Nutrición</span><span class="nota">de rutina</span></div>
+        <div class="cond-row"><span>Odontología</span><span class="nota">de rutina</span></div>
+        <div class="cond-row"><span>Psicología (tamizaje)</span><span class="nota">de rutina</span></div>
+        ${condiciones.map((cond,idx)=>`
+          <div class="cond-row">
+            <span>${cond.nombre}</span>
+            <select class="estado" onchange="cambiarEstadoCondicion('${c.dni}', ${idx}, this.value)">
+              <option value="pendiente" ${cond.estado==='pendiente'?'selected':''}>Pendiente</option>
+              <option value="en_seguimiento" ${cond.estado==='en_seguimiento'?'selected':''}>En seguimiento</option>
+              <option value="atendido" ${cond.estado==='atendido'?'selected':''}>Atendido</option>
+            </select>
+          </div>`).join('')}
+        ${rec.interconsultasExtra.map(v=>`<div class="cond-row"><span>${v}</span></div>`).join('')}
       </div>
 
       ${c.cesareaPrevia==='si' ? `
@@ -175,6 +263,123 @@ function verDetalle(i){
       </div>
     </div>
   `;
+
+  cargarCurvas(c.dni);
+}
+
+function formularioReferenciaGA(c){
+  const hoy = new Date().toISOString().split('T')[0];
+  if(!c.fechaEcoReferencia || c.semanasEcoReferencia===''||c.semanasEcoReferencia===undefined){
+    return `
+      <div class="fila-ga">
+        <input type="date" id="ga_fecha" value="${hoy}" max="${hoy}">
+        <input type="number" id="ga_semanas" min="4" max="42" placeholder="Semanas" style="width:90px">
+        <input type="number" id="ga_dias" min="0" max="6" placeholder="Días" style="width:80px">
+        <button class="btn" onclick="guardarReferenciaGA('${c.dni}')">Guardar edad gestacional</button>
+      </div>`;
+  }
+  return `
+    <p>Registrada: <b>${c.semanasEcoReferencia} sem + ${c.diasEcoReferencia||0} d</b> el ${c.fechaEcoReferencia} (FPP: ${c.fpp || '—'})</p>
+    <span class="accesos-toggle" onclick="mostrarEdicionGA('${c.dni}')">Corregir</span>
+    <div id="edicionGA"></div>`;
+}
+
+function mostrarEdicionGA(dni){
+  const c = consultas.find(x=>x.dni===dni);
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('edicionGA').innerHTML = `
+    <div class="fila-ga" style="margin-top:8px">
+      <input type="date" id="ga_fecha" value="${c.fechaEcoReferencia||hoy}" max="${hoy}">
+      <input type="number" id="ga_semanas" min="4" max="42" value="${c.semanasEcoReferencia||''}" placeholder="Semanas" style="width:90px">
+      <input type="number" id="ga_dias" min="0" max="6" value="${c.diasEcoReferencia||0}" placeholder="Días" style="width:80px">
+      <button class="btn" onclick="guardarReferenciaGA('${c.dni}')">Guardar corrección</button>
+    </div>`;
+}
+
+async function guardarReferenciaGA(dni){
+  const fecha = document.getElementById('ga_fecha').value;
+  const semanas = document.getElementById('ga_semanas').value;
+  const dias = document.getElementById('ga_dias').value || 0;
+  if(!fecha || semanas===''){ alert('Ingresa la fecha de la ecografía y las semanas'); return; }
+  const fpp = calcularFPPDesde(fecha, semanas, dias);
+  let sesion = null;
+  try{ sesion = JSON.parse(localStorage.getItem('sesionDoctor')||'null'); }catch(e){}
+  const clave = sesion ? sesion.clave : '';
+  try{
+    await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({
+      accion:'guardarReferenciaGA', clave, dni,
+      fechaEcoReferencia: fecha, semanasEcoReferencia: semanas, diasEcoReferencia: dias, fpp
+    })});
+  }catch(e){ alert('No se pudo guardar. Intenta de nuevo.'); return; }
+  consultas.forEach(c=>{
+    if(c.dni===dni){
+      c.fechaEcoReferencia = fecha; c.semanasEcoReferencia = semanas; c.diasEcoReferencia = dias; c.fpp = fpp;
+    }
+  });
+  const idx = consultas.findIndex(c=>c.dni===dni);
+  if(idx>=0) verDetalle(idx);
+}
+
+async function cambiarEstadoCondicion(dni, idx, nuevoEstado){
+  const c = consultas.find(x=>x.dni===dni);
+  if(!c) return;
+  let condiciones = [];
+  try{ condiciones = JSON.parse(c.condicionesJSON||'[]'); }catch(e){}
+  if(!condiciones[idx]) return;
+  condiciones[idx].estado = nuevoEstado;
+  const nuevoJSON = JSON.stringify(condiciones);
+  c.condicionesJSON = nuevoJSON;
+  let sesion = null;
+  try{ sesion = JSON.parse(localStorage.getItem('sesionDoctor')||'null'); }catch(e){}
+  const clave = sesion ? sesion.clave : '';
+  try{
+    await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({accion:'actualizarCondiciones', clave, dni, condiciones: nuevoJSON})});
+  }catch(e){ }
+}
+
+async function cargarCurvas(dni){
+  const el = document.getElementById('curvas');
+  if(!el) return;
+  let sesion = null;
+  try{ sesion = JSON.parse(localStorage.getItem('sesionDoctor')||'null'); }catch(e){}
+  const clave = sesion ? sesion.clave : '';
+  try{
+    const res = await fetch(`${WEBAPP_URL}?accion=historialPaciente&dni=${encodeURIComponent(dni)}&clave=${encodeURIComponent(clave)}`);
+    const json = await res.json();
+    if(!json.ok || !json.historial || json.historial.length < 2){
+      el.innerHTML = '<p class="nota">Se necesitan al menos 2 controles para mostrar la curva.</p>';
+      return;
+    }
+    const hist = json.historial.slice().reverse();
+    el.innerHTML = `
+      <p class="nota" style="margin-top:10px">Curva de peso (kg)</p>
+      ${chartSVG(hist.map(h=>parseFloat(h.peso)).filter(v=>!isNaN(v)))}
+      <p class="nota" style="margin-top:10px">Curva de presión sistólica (mmHg)</p>
+      ${chartSVG(hist.map(h=>parseFloat(h.presionSistolica)).filter(v=>!isNaN(v)))}
+    `;
+  }catch(e){
+    el.innerHTML = '<p class="nota">No se pudo cargar el historial.</p>';
+  }
+}
+
+function chartSVG(valores){
+  if(!valores.length) return '<p class="nota">Sin datos suficientes</p>';
+  const w = 280, h = 90, pad = 8;
+  const min = Math.min(...valores), max = Math.max(...valores);
+  const rango = (max-min) || 1;
+  const pts = valores.map((v,i)=>{
+    const x = pad + (i*(w-2*pad)/Math.max(1,valores.length-1));
+    const y = h - pad - ((v-min)/rango)*(h-2*pad);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  return `<svg class="chart" viewBox="0 0 ${w} ${h}">
+    <polyline points="${pts}" fill="none" stroke="var(--rosa,#d16b96)" stroke-width="2.5" />
+    ${valores.map((v,i)=>{
+      const x = pad + (i*(w-2*pad)/Math.max(1,valores.length-1));
+      const y = h - pad - ((v-min)/rango)*(h-2*pad);
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="#d16b96"/>`;
+    }).join('')}
+  </svg>`;
 }
 
 function sintomaLinea(label, val, normalEsSi){
@@ -183,38 +388,59 @@ function sintomaLinea(label, val, normalEsSi){
 }
 
 function calcularGAHoy(c){
-  const fum = new Date(c.fum+'T00:00:00');
+  if(!c.fechaEcoReferencia || c.semanasEcoReferencia===''||c.semanasEcoReferencia===undefined){
+    return { semanas:0, dias:0, diasTotal:0, sinReferencia:true };
+  }
+  const fechaRef = new Date(c.fechaEcoReferencia+'T00:00:00');
   const hoy = new Date();
-  const dias = Math.max(0, Math.floor((hoy-fum)/(1000*60*60*24)));
-  return { semanas: Math.floor(dias/7), dias: dias%7, diasTotal: dias };
+  const diasTranscurridos = Math.max(0, Math.floor((hoy-fechaRef)/(1000*60*60*24)));
+  const diasTotalesRef = (Number(c.semanasEcoReferencia)*7) + Number(c.diasEcoReferencia||0);
+  const diasTotalHoy = diasTotalesRef + diasTranscurridos;
+  return { semanas: Math.floor(diasTotalHoy/7), dias: diasTotalHoy%7, diasTotal: diasTotalHoy, sinReferencia:false };
 }
 
-/* ============ MOTOR DE RECOMENDACIONES ============ */
+function calcularFPPDesde(fechaEcoStr, semanas, dias){
+  const fechaEco = new Date(fechaEcoStr+'T00:00:00');
+  const diasHastaTermino = 280 - ((Number(semanas)*7) + Number(dias||0));
+  const fpp = new Date(fechaEco.getTime() + diasHastaTermino*24*60*60*1000);
+  return fpp.toISOString().split('T')[0];
+}
+
 function generarRecomendaciones(ga, c){
+  if(ga.sinReferencia){
+    return {
+      vacunas: [], labs: ['Registra primero la edad gestacional de referencia arriba'],
+      imagenes: [], interconsultasExtra: [],
+      quirurgico: ['Perfil preoperatorio: hemograma, grupo y factor, PT/TTPA, glucosa, urea, creatinina','VIH, HBsAg (si no vigentes)','Riesgo quirúrgico / evaluación cardiológica','Reserva de sangre (coordinar con banco de sangre)','Programar fecha de cesárea (idealmente 38-39 sem)']
+    };
+  }
   const s = ga.semanas;
   const vacunas = [
-    { texto:'Influenza (cualquier trimestre, temporada)', hecha:false },
-    { texto:'Tdap (Tétanos-Difteria-Pertussis) 27-36 semanas', hecha: s<27 }
+    { texto:'Influenza estacional (cualquier trimestre)', hecha:false },
+    { texto:'Td / Tdap (Tétanos-Difteria-Pertussis) — completar esquema, dosis de refuerzo 27-36 sem', hecha: s<27 },
+    { texto:'COVID-19 — vacunación/refuerzo recomendado en cualquier trimestre según esquema vigente MINSA', hecha:false },
+    { texto:'Virus respiratorio sincitial (RSV / Abrysvo) 32-36 sem — evidencia reciente (ACOG/CDC), aún no forma parte formal del esquema MINSA: evaluar disponibilidad y criterio clínico', hecha: s<32 }
   ];
 
   const labs = [];
   if(s < 14){
     labs.push('Hemograma completo, grupo sanguíneo y factor Rh');
-    labs.push('Glucosa basal, VIH, VDRL/RPR, HBsAg');
+    labs.push('Glucosa basal, VIH, sífilis (RPR/VDRL), HBsAg');
     labs.push('Toxoplasmosis IgG/IgM');
-    labs.push('Examen de orina + urocultivo');
+    labs.push('Examen de orina completo + urocultivo');
     labs.push('Papanicolaou (si no tiene vigente)');
   } else if(s < 24){
-    labs.push('Control de hemograma');
-    labs.push('Urocultivo de control');
+    labs.push('Control de hemograma (descartar anemia)');
+    labs.push('Urocultivo de control si sintomática');
   } else if(s < 28){
-    labs.push('PTOG (test de tolerancia a la glucosa) 24-28 sem');
-    labs.push('Hemograma de control (descartar anemia)');
-  } else if(s < 35){
-    labs.push('VIH y VDRL de control (tercer trimestre)');
+    labs.push('Prueba de tolerancia a la glucosa (PTOG 75g) 24-28 sem');
     labs.push('Hemograma de control');
+  } else if(s < 33){
+    labs.push('Hemograma de control (tercer trimestre)');
+  } else if(s < 37){
+    labs.push('VIH y sífilis (RPR/VDRL) de control — repetir en tercer trimestre');
+    labs.push('Cultivo rectovaginal para Estreptococo del grupo B (35-37 sem)');
   } else {
-    labs.push('Cultivo rectovaginal para Streptococo del grupo B (35-37 sem)');
     labs.push('Perfil de coagulación pre-parto');
   }
 
@@ -225,12 +451,8 @@ function generarRecomendaciones(ga, c){
   if(s >= 32 && s < 37) imagenes.push('Ecografía Doppler / perfil biofísico (34-36 sem) si está indicado');
   if(imagenes.length===0) imagenes.push('Sin estudio de imagen pendiente por semana actual');
 
-  const interconsultas = ['Nutrición', 'Odontología', 'Psicología (tamizaje)'];
-  const ant = (c.antecedentesMedicos||'').toLowerCase();
-  if(ant.includes('diabet') || ant.includes('tiroid')) interconsultas.push('Endocrinología (por antecedente)');
-  if(ant.includes('asma') || ant.includes('pulm')) interconsultas.push('Neumología (por antecedente)');
-  if(ant.includes('cardi')) interconsultas.push('Cardiología (por antecedente)');
-  if(s >= 34 && c.cesareaPrevia==='si') interconsultas.push('Evaluación pre-anestésica (36 sem aprox.)');
+  const interconsultasExtra = [];
+  if(s >= 34 && c.cesareaPrevia==='si') interconsultasExtra.push('Evaluación pre-anestésica (36 sem aprox.)');
 
   const quirurgico = [
     'Perfil preoperatorio: hemograma, grupo y factor, PT/TTPA, glucosa, urea, creatinina',
@@ -240,7 +462,13 @@ function generarRecomendaciones(ga, c){
     'Programar fecha de cesárea (idealmente 38-39 sem)'
   ];
 
-  return { vacunas, labs, imagenes, interconsultas, quirurgico };
+  return { vacunas, labs, imagenes, interconsultasExtra, quirurgico };
+}
+
+function tieneRiesgoPreeclampsia(c){
+  let riesgo = [];
+  try{ riesgo = JSON.parse(c.factoresRiesgoPreeclampsiaJSON||'[]'); }catch(e){}
+  return riesgo.length > 0 ? riesgo : null;
 }
 
 function generarMensaje(c, ga, rec){
@@ -248,20 +476,38 @@ function generarMensaje(c, ga, rec){
     ? '⚠️ La paciente refiere síntomas que requieren evaluación — revisar antes de continuar el plan.'
     : 'Sin síntomas de alarma reportados hoy.';
 
+  const riesgoPE = tieneRiesgoPreeclampsia(c);
+  const asaTxt = riesgoPE && ga.semanas < 37
+    ? `\n- Ácido acetilsalicílico (aspirina) 150 mg VO, una vez al día por la noche, iniciar idealmente antes de las 16 semanas (hasta las 20 sem si no se inició antes) y continuar hasta las 36-37 semanas — indicado por factor(es) de riesgo de preeclampsia: ${riesgoPE.join(', ')}. Confirmar indicación según criterio clínico.`
+    : '';
+
+  let condiciones = [];
+  try{ condiciones = JSON.parse(c.condicionesJSON||'[]'); }catch(e){}
+  const condTxt = condiciones.length
+    ? condiciones.map(cd=>`${cd.nombre} (${cd.estado==='pendiente'?'interconsulta pendiente':cd.estado==='en_seguimiento'?'en seguimiento':'atendido'})`).join('; ')
+    : 'ninguna registrada';
+
+  const gaTxt = ga.sinReferencia
+    ? 'Edad gestacional: pendiente de registrar (falta la ecografía de referencia)'
+    : `Edad gestacional: ${ga.semanas} semanas + ${ga.dias} días (ecografía de referencia: ${c.fechaEcoReferencia} · FPP: ${c.fpp || '—'})`;
+
   return `CONTROL PRENATAL — ${c.nombre} (DNI ${c.dni})
-Edad gestacional: ${ga.semanas} semanas + ${ga.dias} días (FUM: ${c.fum})
+${gaTxt}
+Peso: ${c.peso || '—'} kg · PA: ${c.presionSistolica || '—'}/${c.presionDiastolica || '—'} mmHg
 ${alarmaTxt}
 
 INDICACIONES:
 - Sulfato ferroso 1 tableta VO, 1 hora antes o 2 horas después de las comidas, idealmente con cítricos.
-- Ácido fólico 1 tableta VO cada 24 horas por 30 días (si primer trimestre).
-- Calcio 1 tableta VO cada 24 horas por 30 días.
-- Metildopa 250mg VO cada 8 horas (solo si hipertensión indicada por su médico).
+- Ácido fólico 1 tableta VO cada 24 horas (prioritario en primer trimestre).
+- Calcio 1 tableta VO cada 24 horas.
+- Metildopa 250mg VO cada 8 horas (solo si hipertensión indicada por su médico).${asaTxt}
+
+CONDICIONES / INTERCONSULTAS EN SEGUIMIENTO: ${condTxt}
 
 PENDIENTES:
 - Laboratorios: ${rec.labs.join('; ')}
 - Imágenes: ${rec.imagenes.join('; ')}
-- Interconsultas: ${rec.interconsultas.join('; ')}
+- Interconsultas de rutina: Nutrición; Odontología; Psicología (tamizaje)${rec.interconsultasExtra.length ? '; '+rec.interconsultasExtra.join('; '):''}
 - Vacunas: ${rec.vacunas.filter(v=>!v.hecha).map(v=>v.texto).join('; ') || 'al día'}
 
 SIGNOS DE ALARMA — acudir a Emergencia de inmediato si presenta:
