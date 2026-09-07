@@ -9,21 +9,32 @@
     --rosa:#e8a0bf; --rosa-fuerte:#d16b96; --lila:#b39ddb; --menta:#a3d9c9;
     --texto:#3a2e39; --fondo:#fdf6f9; --card:#ffffff; --borde:#f0dde6;
     --ok:#5fb98c; --alerta:#e0645b; --sombra:0 6px 20px rgba(209,107,150,.12);
+    --bg-grad:linear-gradient(180deg,#fdf6f9,#f7eef4); --input-bg:#fffafc; --muted:#8a7b86;
+  }
+  html[data-theme="dark"]{
+    --rosa:#c77a9c; --rosa-fuerte:#e28ab0; --lila:#9c8bd6; --menta:#7fc9ae;
+    --texto:#eee0e8; --fondo:#221a20; --card:#2c2229; --borde:#3d2f38;
+    --ok:#6fce9c; --alerta:#f0827a; --sombra:0 6px 20px rgba(0,0,0,.35);
+    --bg-grad:linear-gradient(180deg,#221a20,#1a1418); --input-bg:#241b21; --muted:#b3a2ac;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   body{
-    margin:0; font-family:'Segoe UI',system-ui,sans-serif; background:linear-gradient(180deg,#fdf6f9,#f7eef4);
-    color:var(--texto); min-height:100vh; padding-bottom:40px;
+    margin:0; font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg-grad);
+    color:var(--texto); min-height:100vh; padding-bottom:40px; transition:background .2s,color .2s;
   }
   header{
     padding:22px 20px 18px; text-align:center; background:linear-gradient(135deg,var(--rosa),var(--lila));
-    color:#fff; border-radius:0 0 28px 28px; box-shadow:var(--sombra);
+    color:#fff; border-radius:0 0 28px 28px; box-shadow:var(--sombra); position:relative;
   }
   header h1{margin:0; font-size:1.25rem; font-weight:700;}
   header p{margin:4px 0 0; font-size:.85rem; opacity:.9;}
+  .modo-btn{
+    position:absolute; top:18px; right:18px; width:36px; height:36px; border-radius:50%;
+    background:rgba(255,255,255,.25); border:none; color:#fff; font-size:1.1rem; cursor:pointer;
+  }
   .wrap{max-width:480px; margin:0 auto; padding:18px 16px;}
   .progress{display:flex; gap:6px; margin:16px 0 22px;}
-  .progress div{flex:1; height:5px; border-radius:4px; background:#eadbe3;}
+  .progress div{flex:1; height:5px; border-radius:4px; background:var(--borde);}
   .progress div.on{background:var(--rosa-fuerte);}
   .card{
     background:var(--card); border-radius:20px; padding:22px 20px; box-shadow:var(--sombra);
@@ -31,26 +42,29 @@
   }
   @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
   .card h2{margin:0 0 4px; font-size:1.08rem; color:var(--rosa-fuerte);}
-  .card .sub{font-size:.82rem; color:#8a7b86; margin-bottom:16px;}
+  .card .sub{font-size:.82rem; color:var(--muted); margin-bottom:16px;}
   label{display:block; font-size:.88rem; font-weight:600; margin:14px 0 6px;}
   input[type=text], input[type=date], input[type=number], textarea, select{
     width:100%; padding:12px 14px; border:1.5px solid var(--borde); border-radius:12px;
-    font-size:1rem; background:#fffafc; color:var(--texto); font-family:inherit;
+    font-size:1rem; background:var(--input-bg); color:var(--texto); font-family:inherit;
   }
   input:focus, textarea:focus, select:focus{outline:none; border-color:var(--rosa-fuerte);}
-  textarea{min-height:70px; resize:vertical;}
+  textarea{min-height:60px; resize:vertical;}
+  .fila2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
   .chip-group{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
   .chip{
-    padding:10px 16px; border-radius:999px; border:1.5px solid var(--borde); background:#fff;
-    font-size:.88rem; cursor:pointer; user-select:none; transition:.15s;
+    padding:10px 16px; border-radius:999px; border:1.5px solid var(--borde); background:var(--card);
+    font-size:.88rem; cursor:pointer; user-select:none; transition:.15s; color:var(--texto);
   }
   .chip.si{border-color:var(--alerta);}
   .chip.si.sel{background:var(--alerta); color:#fff;}
   .chip.no{border-color:var(--ok);}
   .chip.no.sel{background:var(--ok); color:#fff;}
+  .chip.multi{border-color:var(--lila);}
+  .chip.multi.sel{background:var(--lila); color:#fff;}
   .toggle-item{
     display:flex; justify-content:space-between; align-items:center; padding:12px 0;
-    border-bottom:1px solid var(--borde);
+    border-bottom:1px solid var(--borde); gap:10px;
   }
   .toggle-item:last-child{border-bottom:none;}
   .toggle-item span{font-size:.92rem;}
@@ -63,32 +77,39 @@
   .btns{display:flex; gap:10px; margin-top:22px;}
   button{
     flex:1; padding:14px; border:none; border-radius:14px; font-size:.98rem; font-weight:700;
-    cursor:pointer; transition:.15s;
+    cursor:pointer; transition:.15s; font-family:inherit;
   }
   .btn-primario{background:linear-gradient(135deg,var(--rosa-fuerte),var(--lila)); color:#fff;}
   .btn-primario:active{transform:scale(.97);}
-  .btn-secundario{background:#f2e6ec; color:var(--rosa-fuerte);}
+  .btn-secundario{background:var(--borde); color:var(--rosa-fuerte);}
   .btn-secundario:active{transform:scale(.97);}
   .ga-box{
-    margin-top:14px; padding:14px; background:#f7edf2; border-radius:14px; text-align:center;
+    margin-top:14px; padding:14px; background:var(--input-bg); border-radius:14px; text-align:center;
   }
   .ga-box .num{font-size:1.6rem; font-weight:800; color:var(--rosa-fuerte);}
-  .ga-box .lbl{font-size:.78rem; color:#8a7b86;}
-  .hint{font-size:.78rem; color:#9a8b95; margin-top:6px;}
+  .ga-box .lbl{font-size:.78rem; color:var(--muted);}
+  .ga-box .fpp{font-size:.85rem; color:var(--texto); margin-top:6px;}
+  .hint{font-size:.78rem; color:var(--muted); margin-top:6px;}
   .oculto{display:none !important;}
   .pill{
     display:inline-block; font-size:.72rem; padding:3px 10px; border-radius:999px;
-    background:#eadbe3; color:var(--rosa-fuerte); font-weight:600; margin-bottom:8px;
+    background:var(--borde); color:var(--rosa-fuerte); font-weight:600; margin-bottom:8px;
   }
   .final{text-align:center; padding:20px 10px;}
   .final .check{font-size:3rem;}
   .banner-alarma{
     background:#fdeceb; border:1.5px solid #f3b9b3; border-radius:14px; padding:14px; margin-top:16px; font-size:.85rem; color:#8c3a33;
   }
+  html[data-theme="dark"] .banner-alarma{background:#3a2320; border-color:#5c3630; color:#f3b9b3;}
+  .lab-item{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--borde);}
+  .lab-item:last-child{border-bottom:none;}
+  .lab-item input[type=checkbox]{width:19px; height:19px; accent-color:var(--rosa-fuerte); flex:none;}
+  .lab-item label{margin:0; font-size:.9rem; font-weight:500;}
 </style>
 </head>
 <body>
 <header>
+  <button class="modo-btn" id="btnModo" onclick="toggleModo()">🌙</button>
   <h1>🤰 Control Prenatal</h1>
   <p>Un par de minutos, para tu seguridad y la de tu bebé</p>
 </header>
@@ -100,32 +121,55 @@
 
 <script>
 /* =====================  CONFIG  ===================== */
-// Pega aquí la URL de tu Web App de Google Apps Script (ver Code.gs)
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxQ-IDYNgKZ_Ox_5RLMm8WjiMMDaE0tOLBUzf46wRmDJiW4OthlgKHE3FoVjqyixVH96A/exec";
+
+/* =====================  MODO OSCURO  ===================== */
+function toggleModo(){
+  const html = document.documentElement;
+  const actual = html.getAttribute('data-theme');
+  const nuevo = actual === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', nuevo);
+  document.getElementById('btnModo').textContent = nuevo === 'dark' ? '☀️' : '🌙';
+  try{ localStorage.setItem('modoOscuro', nuevo); }catch(e){}
+}
+(function initModo(){
+  let pref = null;
+  try{ pref = localStorage.getItem('modoOscuro'); }catch(e){}
+  if(!pref){ pref = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+  document.documentElement.setAttribute('data-theme', pref);
+})();
 
 /* =====================  ESTADO  ===================== */
 let paso = 0;
 let esNueva = true;
+let yaTieneGesta = false; // true si ya se calculó la FUM en un contacto anterior
+const LISTA_CONDICIONES = ['Diabetes gestacional/pregestacional','Hipotiroidismo','Hipertensión crónica','Asma / enfermedad pulmonar','Cardiopatía','Enfermedad renal','Enfermedad autoinmune (lupus, etc.)'];
+const LISTA_RIESGO_PREECLAMPSIA = ['Primer embarazo (nulípara)','Hipertensión crónica','Diabetes (pregestacional o gestacional)','Enfermedad renal','Enfermedad autoinmune','Embarazo múltiple','IMC mayor a 30','Antecedente de preeclampsia en embarazo previo','Edad mayor a 35 años'];
+const LISTA_LABS = ['Hemograma completo','Grupo sanguíneo y factor Rh','Glucosa basal','VIH','Sífilis (RPR/VDRL)','Hepatitis B (HBsAg)','Toxoplasmosis IgG/IgM','Examen de orina completo','Papanicolaou','Prueba de tolerancia a la glucosa (PTOG)','Cultivo rectovaginal (Estreptococo grupo B)'];
+
 const datos = {
   dni:'', nombre:'',
   antecedentesMedicos:'', antecedentesQuirurgicos:'', alergias:'', tratamientoActual:'',
   cesareaPrevia:'no', grupoSanguineo:'',
-  fum:'', edadGestSemanasAlIngreso:0, edadGestDiasAlIngreso:0, fechaIngresoGesta:'',
+  condicionesJSON:'[]', factoresRiesgoPreeclampsiaJSON:'[]',
+  fum:'', edadGestSemanasAlIngreso:0, edadGestDiasAlIngreso:0, fechaIngresoGesta:'', fpp:'',
+  peso:'', presionSistolica:'', presionDiastolica:'',
   movimientosFetales:'si', sangrado:'no', perdidaLiquido:'no',
   cefalea:'no', visionBorrosa:'no', dolorEpigastrico:'no', tinnitus:'no', escotomas:'no', otroSintoma:'',
   ecoGenetica:'no', ecoMorfologica:'no', ecoPrevia:'no', ecoObservaciones:'',
-  laboratorios:'', planAceptado:'no'
+  laboratoriosJSON:'[]', planAceptado:'no'
 };
+let condicionesSel = []; // array de strings mientras se editan
+let riesgoSel = [];
+let labsSel = [];
 
-const pasos = ['identificacion','antecedentes','gestacion','sintomas','ecografias','laboratorios','final'];
+const pasos = ['identificacion','antecedentes','gestacion','vitales','sintomas','ecografias','laboratorios','final'];
 
 function render(){
   document.getElementById('progress').innerHTML = pasos.map((p,i)=>
     `<div class="${i<=paso?'on':''}"></div>`).join('');
   const fn = window['vista_'+pasos[paso]];
   document.getElementById('card').innerHTML = fn();
-  document.getElementById('card').classList.remove('fade');
-  void document.getElementById('card').offsetWidth;
 }
 
 function ir(delta){
@@ -136,7 +180,7 @@ function ir(delta){
 /* =====================  VISTA 1: IDENTIFICACIÓN  ===================== */
 function vista_identificacion(){
   return `
-    <span class="pill">Paso 1 de 7</span>
+    <span class="pill">Paso 1 de 8</span>
     <h2>¿Quién eres?</h2>
     <div class="sub">Ingresa tu DNI para ver si ya tienes historia registrada</div>
     <label>DNI</label>
@@ -166,6 +210,16 @@ async function buscarPaciente(){
       datos.tratamientoActual = p.tratamientoActual||'';
       datos.cesareaPrevia = p.cesareaPrevia||'no';
       datos.grupoSanguineo = p.grupoSanguineo||'';
+      datos.condicionesJSON = p.condicionesJSON || '[]';
+      datos.factoresRiesgoPreeclampsiaJSON = p.factoresRiesgoPreeclampsiaJSON || '[]';
+      if(p.fum){
+        yaTieneGesta = true;
+        datos.fum = p.fum;
+        datos.fechaIngresoGesta = p.fechaIngresoGesta || '';
+        datos.fpp = p.fpp || '';
+        datos.edadGestSemanasAlIngreso = p.edadGestSemanasAlIngreso || 0;
+        datos.edadGestDiasAlIngreso = p.edadGestDiasAlIngreso || 0;
+      }
     } else {
       esNueva = true;
     }
@@ -174,31 +228,62 @@ async function buscarPaciente(){
   ir(1);
 }
 
+/* =====================  helpers de selección múltiple  ===================== */
+function multiChip(lista, seleccionados, campo){
+  return lista.map(item => {
+    const sel = seleccionados.includes(item);
+    return `<div class="chip multi ${sel?'sel':''}" onclick="toggleMulti('${campo}', this, '${item.replace(/'/g,"\\'")}')">${item}</div>`;
+  }).join('');
+}
+function toggleMulti(campo, el, valor){
+  const arr = campo==='condiciones' ? condicionesSel : (campo==='riesgo' ? riesgoSel : labsSel);
+  const idx = arr.indexOf(valor);
+  if(idx>=0){ arr.splice(idx,1); el.classList.remove('sel'); }
+  else{ arr.push(valor); el.classList.add('sel'); }
+}
+
 /* =====================  VISTA 2: ANTECEDENTES (solo si es nueva)  ===================== */
 function vista_antecedentes(){
   if(!esNueva){
-    // paciente conocida: confirma datos rápido y avanza
+    let pendientes = [];
+    try{ pendientes = JSON.parse(datos.condicionesJSON||'[]').filter(c=>c.estado!=='atendido'); }catch(e){}
     return `
-      <span class="pill">Paso 2 de 7</span>
+      <span class="pill">Paso 2 de 8</span>
       <h2>¡Qué gusto verte de nuevo, ${datos.nombre.split(' ')[0]}! 👋</h2>
-      <div class="sub">Ya tenemos tus antecedentes registrados. ¿Ha cambiado algo?</div>
+      <div class="sub">Ya tenemos tus antecedentes registrados. Solo confirmemos lo esencial.</div>
       <div class="toggle-item"><span>Cesárea previa</span>
         <label class="switch"><input type="checkbox" id="chk_cesarea" ${datos.cesareaPrevia==='si'?'checked':''}><span class="slider"></span></label>
       </div>
       <label>¿Algún medicamento nuevo o alergia nueva?</label>
-      <textarea id="in_trat_upd" placeholder="Déjalo en blanco si no hay cambios">${datos.tratamientoActual}</textarea>
+      <textarea id="in_trat_upd" placeholder="Déjalo en blanco si no hay cambios"></textarea>
+      ${pendientes.length ? `
+        <label>Interconsultas / evaluaciones pendientes — ¿ya te las hiciste?</label>
+        <div id="pend_list">
+        ${pendientes.map((p,i)=>`
+          <div class="toggle-item"><span>${p.nombre}</span>
+            <label class="switch"><input type="checkbox" data-nombre="${p.nombre}" class="chk_pend"><span class="slider"></span></label>
+          </div>`).join('')}
+        </div>
+        <div class="hint">Marca si ya la realizaste; si no, la seguimos viendo como pendiente.</div>
+      ` : ''}
       <div class="btns">
         <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
         <button class="btn-primario" onclick="guardarAntecedentesConocida()">Continuar →</button>
       </div>
     `;
   }
+  condicionesSel = [];
+  try{ condicionesSel = JSON.parse(datos.condicionesJSON||'[]').map(c=>c.nombre); }catch(e){}
+  riesgoSel = [];
+  try{ riesgoSel = JSON.parse(datos.factoresRiesgoPreeclampsiaJSON||'[]'); }catch(e){}
   return `
-    <span class="pill">Paso 2 de 7</span>
+    <span class="pill">Paso 2 de 8</span>
     <h2>Cuéntanos tu historia</h2>
     <div class="sub">Es tu primer registro — esto nos ayuda a cuidarte mejor</div>
-    <label>Enfermedades médicas (diabetes, hipertensión, tiroides, etc.)</label>
-    <textarea id="in_med" placeholder="Ej: hipotiroidismo. Si ninguna, escribe 'ninguna'">${datos.antecedentesMedicos}</textarea>
+    <label>¿Tienes alguna de estas condiciones médicas?</label>
+    <div class="chip-group">${multiChip(LISTA_CONDICIONES, condicionesSel, 'condiciones')}</div>
+    <label>Otras enfermedades médicas no listadas</label>
+    <textarea id="in_med" placeholder="Si ninguna, deja en blanco">${datos.antecedentesMedicos}</textarea>
     <label>Cirugías previas</label>
     <textarea id="in_qx" placeholder="Ej: apendicectomía 2018. Si ninguna, escribe 'ninguna'">${datos.antecedentesQuirurgicos}</textarea>
     <label>Alergias a medicamentos</label>
@@ -210,6 +295,9 @@ function vista_antecedentes(){
     <div class="toggle-item"><span>¿Tuviste cesárea antes?</span>
       <label class="switch"><input type="checkbox" id="chk_cesarea" ${datos.cesareaPrevia==='si'?'checked':''}><span class="slider"></span></label>
     </div>
+    <label style="margin-top:18px">Factores que podrían indicar mayor riesgo de preeclampsia</label>
+    <div class="chip-group">${multiChip(LISTA_RIESGO_PREECLAMPSIA, riesgoSel, 'riesgo')}</div>
+    <div class="hint">Marca las que apliquen. Tu médico evaluará si necesitas alguna indicación preventiva.</div>
     <div class="btns">
       <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
       <button class="btn-primario" onclick="guardarAntecedentesNueva()">Continuar →</button>
@@ -224,21 +312,59 @@ function guardarAntecedentesNueva(){
   datos.tratamientoActual = document.getElementById('in_trat').value.trim() || 'ninguno';
   datos.grupoSanguineo = document.getElementById('in_grupo').value.trim();
   datos.cesareaPrevia = document.getElementById('chk_cesarea').checked ? 'si' : 'no';
+  datos.condicionesJSON = JSON.stringify(condicionesSel.map(nombre=>({nombre, estado:'pendiente'})));
+  datos.factoresRiesgoPreeclampsiaJSON = JSON.stringify(riesgoSel);
   ir(1);
 }
 function guardarAntecedentesConocida(){
   const upd = document.getElementById('in_trat_upd').value.trim();
   if(upd) datos.tratamientoActual = upd;
   datos.cesareaPrevia = document.getElementById('chk_cesarea').checked ? 'si' : 'no';
+  let cond = [];
+  try{ cond = JSON.parse(datos.condicionesJSON||'[]'); }catch(e){}
+  document.querySelectorAll('.chk_pend').forEach(chk=>{
+    if(chk.checked){
+      const nombre = chk.getAttribute('data-nombre');
+      cond = cond.map(c => c.nombre===nombre ? {...c, estado:'atendido'} : c);
+    }
+  });
+  datos.condicionesJSON = JSON.stringify(cond);
   ir(1);
 }
 
 /* =====================  VISTA 3: GESTACIÓN  ===================== */
+function calcularFPP(fumStr){
+  const fum = new Date(fumStr+'T00:00:00');
+  const fpp = new Date(fum.getTime() + 280*24*60*60*1000);
+  return fpp.toISOString().split('T')[0];
+}
+
 function vista_gestacion(){
+  if(yaTieneGesta && datos.fum){
+    const fum = new Date(datos.fum+'T00:00:00');
+    const hoy = new Date();
+    const dias = Math.max(0, Math.floor((hoy-fum)/(1000*60*60*24)));
+    const semanas = Math.floor(dias/7), diasRest = dias%7;
+    const fppTxt = datos.fpp ? new Date(datos.fpp+'T00:00:00').toLocaleDateString('es-PE') : '—';
+    return `
+      <span class="pill">Paso 3 de 8</span>
+      <h2>Tu embarazo hoy</h2>
+      <div class="sub">Ya registramos tu fecha de última regla en un control anterior</div>
+      <div class="ga-box">
+        <div class="num">${semanas}<span style="font-size:1rem"> sem + ${diasRest} d</span></div>
+        <div class="lbl">Edad gestacional actual (calculada hoy, ${hoy.toLocaleDateString('es-PE')})</div>
+        <div class="fpp">📅 Fecha probable de parto: <b>${fppTxt}</b></div>
+      </div>
+      <div class="btns">
+        <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
+        <button class="btn-primario" onclick="ir(1)">Continuar →</button>
+      </div>
+    `;
+  }
   return `
-    <span class="pill">Paso 3 de 7</span>
+    <span class="pill">Paso 3 de 8</span>
     <h2>Edad gestacional</h2>
-    <div class="sub">Ingresa la fecha de última regla (FUM) para calcular tu semana actual</div>
+    <div class="sub">Este es tu primer control con nosotros: ingresa tu fecha de última regla (FUM). No te la volveremos a pedir.</div>
     <label>Fecha de última regla (FUM)</label>
     <input type="date" id="in_fum" value="${datos.fum}" max="${new Date().toISOString().split('T')[0]}" onchange="calcularGA()">
     <div class="ga-box" id="ga_box">
@@ -266,23 +392,54 @@ function calcularGA(){
   }
   const semanas = Math.floor(dias/7);
   const diasRest = dias%7;
+  const fpp = calcularFPP(val);
   document.getElementById('ga_box').innerHTML = `
     <div class="num">${semanas}<span style="font-size:1rem"> sem + ${diasRest} d</span></div>
-    <div class="lbl">Edad gestacional actual (calculada hoy, ${hoy.toLocaleDateString('es-PE')})</div>`;
+    <div class="lbl">Edad gestacional actual (calculada hoy, ${hoy.toLocaleDateString('es-PE')})</div>
+    <div class="fpp">📅 Fecha probable de parto: <b>${new Date(fpp+'T00:00:00').toLocaleDateString('es-PE')}</b></div>`;
   datos.edadGestSemanasAlIngreso = semanas;
   datos.edadGestDiasAlIngreso = diasRest;
+  datos.fpp = fpp;
 }
 
 function guardarGestacion(){
   datos.fum = document.getElementById('in_fum').value;
   if(!datos.fum){ alert('Ingresa la fecha de última regla'); return; }
   datos.fechaIngresoGesta = new Date().toISOString().split('T')[0];
+  if(!datos.fpp) datos.fpp = calcularFPP(datos.fum);
   const obs = document.getElementById('in_ga_obs').value.trim();
   if(obs) datos.otroSintoma = (datos.otroSintoma? datos.otroSintoma+' | ':'') + 'FUM obs: '+obs;
   ir(1);
 }
 
-/* =====================  VISTA 4: SÍNTOMAS  ===================== */
+/* =====================  VISTA 4: VITALES  ===================== */
+function vista_vitales(){
+  return `
+    <span class="pill">Paso 4 de 8</span>
+    <h2>Tus signos vitales de hoy</h2>
+    <div class="sub">Si te los tomaron al ingresar a consulta, regístralos aquí</div>
+    <label>Peso (kg)</label>
+    <input type="number" id="in_peso" inputmode="decimal" step="0.1" placeholder="Ej: 65.5" value="${datos.peso}">
+    <label>Presión arterial (mmHg)</label>
+    <div class="fila2">
+      <input type="number" id="in_pas" inputmode="numeric" placeholder="Sistólica (Ej: 110)" value="${datos.presionSistolica}">
+      <input type="number" id="in_pad" inputmode="numeric" placeholder="Diastólica (Ej: 70)" value="${datos.presionDiastolica}">
+    </div>
+    <div class="hint">Si no te la tomaron todavía, puedes dejarlo en blanco y continuar.</div>
+    <div class="btns">
+      <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
+      <button class="btn-primario" onclick="guardarVitales()">Continuar →</button>
+    </div>
+  `;
+}
+function guardarVitales(){
+  datos.peso = document.getElementById('in_peso').value.trim();
+  datos.presionSistolica = document.getElementById('in_pas').value.trim();
+  datos.presionDiastolica = document.getElementById('in_pad').value.trim();
+  ir(1);
+}
+
+/* =====================  VISTA 5: SÍNTOMAS  ===================== */
 function chipRow(id, label, val){
   return `
   <label>${label}</label>
@@ -299,7 +456,7 @@ function setChip(id, val, el){
 
 function vista_sintomas(){
   return `
-    <span class="pill">Paso 4 de 7</span>
+    <span class="pill">Paso 5 de 8</span>
     <h2>¿Cómo te sientes hoy?</h2>
     <div class="sub">Responde con sinceridad, nos ayuda a detectar señales a tiempo</div>
     ${chipRow('movimientosFetales','¿Sientes que el bebé se mueve con normalidad?', datos.movimientosFetales)}
@@ -323,10 +480,10 @@ function guardarSintomas(){
   ir(1);
 }
 
-/* =====================  VISTA 5: ECOGRAFÍAS  ===================== */
+/* =====================  VISTA 6: ECOGRAFÍAS  ===================== */
 function vista_ecografias(){
   return `
-    <span class="pill">Paso 5 de 7</span>
+    <span class="pill">Paso 6 de 8</span>
     <h2>Ecografías institucionales</h2>
     <div class="sub">Solo cuentan las realizadas en nuestra institución</div>
     ${chipRow('ecoGenetica','¿Te realizaste la ecografía genética (11-14 sem)?', datos.ecoGenetica)}
@@ -345,13 +502,19 @@ function guardarEcografias(){
   ir(1);
 }
 
-/* =====================  VISTA 6: LABORATORIOS  ===================== */
+/* =====================  VISTA 7: LABORATORIOS  ===================== */
 function vista_laboratorios(){
+  labsSel = [];
+  try{ labsSel = JSON.parse(datos.laboratoriosJSON||'[]').map(l=>l.examen); }catch(e){}
   return `
-    <span class="pill">Paso 6 de 7</span>
+    <span class="pill">Paso 7 de 8</span>
     <h2>Laboratorios</h2>
-    <div class="sub">¿Qué exámenes de sangre u orina te has realizado en este embarazo?</div>
-    <textarea id="in_labs" placeholder="Ej: hemograma, glucosa, VIH, VDRL, examen de orina... (los que recuerdes)">${datos.laboratorios}</textarea>
+    <div class="sub">Marca los exámenes que te hayas realizado en este embarazo</div>
+    <div class="chip-group">${multiChip(LISTA_LABS, labsSel, 'labs')}</div>
+    <label>¿Aproximadamente cuándo te los hiciste? (el más reciente)</label>
+    <input type="date" id="in_labs_fecha" max="${new Date().toISOString().split('T')[0]}">
+    <label>Otro examen no listado</label>
+    <textarea id="in_labs_otro" placeholder="Opcional"></textarea>
     <div class="btns">
       <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
       <button class="btn-primario" onclick="guardarLabs()">Continuar →</button>
@@ -359,11 +522,15 @@ function vista_laboratorios(){
   `;
 }
 function guardarLabs(){
-  datos.laboratorios = document.getElementById('in_labs').value.trim() || 'no refiere';
+  const fecha = document.getElementById('in_labs_fecha').value || '';
+  const otro = document.getElementById('in_labs_otro').value.trim();
+  const lista = labsSel.map(examen => ({examen, fecha}));
+  if(otro) lista.push({examen:otro, fecha});
+  datos.laboratoriosJSON = JSON.stringify(lista);
   ir(1);
 }
 
-/* =====================  VISTA 7: FINAL  ===================== */
+/* =====================  VISTA 8: FINAL  ===================== */
 function vista_final(){
   return `
     <div class="final">
@@ -395,11 +562,7 @@ async function enviarTodo(){
   btn.disabled = true; btn.textContent = 'Enviando...';
 
   try{
-    if(esNueva){
-      await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({accion:'guardarPaciente', paciente:datos})});
-    } else {
-      await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({accion:'guardarPaciente', paciente:datos})});
-    }
+    await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({accion:'guardarPaciente', paciente:datos})});
     await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({accion:'guardarConsulta', consulta:datos})});
 
     document.getElementById('card').innerHTML = `
