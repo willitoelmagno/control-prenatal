@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Prenatal</title>
+<style>
+  :root{
+    --rosa:#e8a0bf; --rosa-fuerte:#d16b96; --lila:#b39ddb; --menta:#a3d9c9;
+    --texto:#3a2e39; --fondo:#fdf6f9; --card:#ffffff; --borde:#f0dde6;
+    --ok:#5fb98c; --alerta:#e0645b; --sombra:0 6px 20px rgba(209,107,150,.12);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0; font-family:'Segoe UI',system-ui,sans-serif; background:linear-gradient(180deg,#fdf6f9,#f7eef4);
+    color:var(--texto); min-height:100vh; padding-bottom:40px;
+  }
+  header{
+    padding:22px 20px 18px; text-align:center; background:linear-gradient(135deg,var(--rosa),var(--lila));
+    color:#fff; border-radius:0 0 28px 28px; box-shadow:var(--sombra);
+  }
+  header h1{margin:0; font-size:1.25rem; font-weight:700;}
+  header p{margin:4px 0 0; font-size:.85rem; opacity:.9;}
+  .wrap{max-width:480px; margin:0 auto; padding:18px 16px;}
+  .progress{display:flex; gap:6px; margin:16px 0 22px;}
+  .progress div{flex:1; height:5px; border-radius:4px; background:#eadbe3;}
+  .progress div.on{background:var(--rosa-fuerte);}
+  .card{
+    background:var(--card); border-radius:20px; padding:22px 20px; box-shadow:var(--sombra);
+    border:1px solid var(--borde); animation:fade .25s ease;
+  }
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  .card h2{margin:0 0 4px; font-size:1.08rem; color:var(--rosa-fuerte);}
+  .card .sub{font-size:.82rem; color:#8a7b86; margin-bottom:16px;}
+  label{display:block; font-size:.88rem; font-weight:600; margin:14px 0 6px;}
+  input[type=text], input[type=date], input[type=number], textarea, select{
+    width:100%; padding:12px 14px; border:1.5px solid var(--borde); border-radius:12px;
+    font-size:1rem; background:#fffafc; color:var(--texto); font-family:inherit;
+  }
+  input:focus, textarea:focus, select:focus{outline:none; border-color:var(--rosa-fuerte);}
+  textarea{min-height:70px; resize:vertical;}
+  .chip-group{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
+  .chip{
+    padding:10px 16px; border-radius:999px; border:1.5px solid var(--borde); background:#fff;
+    font-size:.88rem; cursor:pointer; user-select:none; transition:.15s;
+  }
+  .chip.si{border-color:var(--alerta);}
+  .chip.si.sel{background:var(--alerta); color:#fff;}
+  .chip.no{border-color:var(--ok);}
+  .chip.no.sel{background:var(--ok); color:#fff;}
+  .toggle-item{
+    display:flex; justify-content:space-between; align-items:center; padding:12px 0;
+    border-bottom:1px solid var(--borde);
+  }
+  .toggle-item:last-child{border-bottom:none;}
+  .toggle-item span{font-size:.92rem;}
+  .switch{position:relative; width:48px; height:26px; flex:none;}
+  .switch input{opacity:0; width:0; height:0;}
+  .slider{position:absolute; inset:0; background:#e3d3dc; border-radius:30px; cursor:pointer; transition:.2s;}
+  .slider:before{content:""; position:absolute; height:20px; width:20px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s;}
+  input:checked + .slider{background:var(--rosa-fuerte);}
+  input:checked + .slider:before{transform:translateX(22px);}
+  .btns{display:flex; gap:10px; margin-top:22px;}
+  button{
+    flex:1; padding:14px; border:none; border-radius:14px; font-size:.98rem; font-weight:700;
+    cursor:pointer; transition:.15s;
+  }
+  .btn-primario{background:linear-gradient(135deg,var(--rosa-fuerte),var(--lila)); color:#fff;}
+  .btn-primario:active{transform:scale(.97);}
+  .btn-secundario{background:#f2e6ec; color:var(--rosa-fuerte);}
+  .btn-secundario:active{transform:scale(.97);}
+  .ga-box{
+    margin-top:14px; padding:14px; background:#f7edf2; border-radius:14px; text-align:center;
+  }
+  .ga-box .num{font-size:1.6rem; font-weight:800; color:var(--rosa-fuerte);}
+  .ga-box .lbl{font-size:.78rem; color:#8a7b86;}
+  .hint{font-size:.78rem; color:#9a8b95; margin-top:6px;}
+  .oculto{display:none !important;}
+  .pill{
+    display:inline-block; font-size:.72rem; padding:3px 10px; border-radius:999px;
+    background:#eadbe3; color:var(--rosa-fuerte); font-weight:600; margin-bottom:8px;
+  }
+  .final{text-align:center; padding:20px 10px;}
+  .final .check{font-size:3rem;}
+  .banner-alarma{
+    background:#fdeceb; border:1.5px solid #f3b9b3; border-radius:14px; padding:14px; margin-top:16px; font-size:.85rem; color:#8c3a33;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🤰 Control Prenatal</h1>
+  <p>Un par de minutos, para tu seguridad y la de tu bebé</p>
+</header>
+
+<div class="wrap">
+  <div class="progress" id="progress"></div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+/* =====================  CONFIG  ===================== */
+// Pega aquí la URL de tu Web App de Google Apps Script (ver Code.gs)
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxQ-IDYNgKZ_Ox_5RLMm8WjiMMDaE0tOLBUzf46wRmDJiW4OthlgKHE3FoVjqyixVH96A/exec";
+
+/* =====================  ESTADO  ===================== */
+let paso = 0;
+let esNueva = true;
+const datos = {
+  dni:'', nombre:'',
+  antecedentesMedicos:'', antecedentesQuirurgicos:'', alergias:'', tratamientoActual:'',
+  cesareaPrevia:'no', grupoSanguineo:'',
+  fum:'', edadGestSemanasAlIngreso:0, edadGestDiasAlIngreso:0, fechaIngresoGesta:'',
+  movimientosFetales:'si', sangrado:'no', perdidaLiquido:'no',
+  cefalea:'no', visionBorrosa:'no', dolorEpigastrico:'no', tinnitus:'no', escotomas:'no', otroSintoma:'',
+  ecoGenetica:'no', ecoMorfologica:'no', ecoPrevia:'no', ecoObservaciones:'',
+  laboratorios:'', planAceptado:'no'
+};
+
+const pasos = ['identificacion','antecedentes','gestacion','sintomas','ecografias','laboratorios','final'];
+
+function render(){
+  document.getElementById('progress').innerHTML = pasos.map((p,i)=>
+    `<div class="${i<=paso?'on':''}"></div>`).join('');
+  const fn = window['vista_'+pasos[paso]];
+  document.getElementById('card').innerHTML = fn();
+  document.getElementById('card').classList.remove('fade');
+  void document.getElementById('card').offsetWidth;
+}
+
+function ir(delta){
+  paso = Math.max(0, Math.min(pasos.length-1, paso+delta));
+  render();
+}
+
+/* =====================  VISTA 1: IDENTIFICACIÓN  ===================== */
+function vista_identificacion(){
+  return `
+    <span class="pill">Paso 1 de 7</span>
+    <h2>¿Quién eres?</h2>
+    <div class="sub">Ingresa tu DNI para ver si ya tienes historia registrada</div>
+    <label>DNI</label>
+    <input type="text" id="in_dni" inputmode="numeric" maxlength="15" placeholder="Ej: 45678912" value="${datos.dni}">
+    <label>Nombre completo</label>
+    <input type="text" id="in_nombre" placeholder="Tus nombres y apellidos" value="${datos.nombre}">
+    <div class="btns">
+      <button class="btn-primario" style="flex:1" onclick="buscarPaciente()">Continuar →</button>
+    </div>
+  `;
+}
+
+async function buscarPaciente(){
+  datos.dni = document.getElementById('in_dni').value.trim();
+  datos.nombre = document.getElementById('in_nombre').value.trim();
+  if(!datos.dni || !datos.nombre){ alert('Por favor completa tu DNI y nombre'); return; }
+
+  try{
+    const res = await fetch(`${WEBAPP_URL}?accion=buscarPaciente&dni=${encodeURIComponent(datos.dni)}`);
+    const json = await res.json();
+    if(json.ok && json.encontrada){
+      esNueva = false;
+      const p = json.paciente;
+      datos.antecedentesMedicos = p.antecedentesMedicos||'';
+      datos.antecedentesQuirurgicos = p.antecedentesQuirurgicos||'';
+      datos.alergias = p.alergias||'';
+      datos.tratamientoActual = p.tratamientoActual||'';
+      datos.cesareaPrevia = p.cesareaPrevia||'no';
+      datos.grupoSanguineo = p.grupoSanguineo||'';
+    } else {
+      esNueva = true;
+    }
+  }catch(e){ esNueva = true; }
+
+  ir(1);
+}
+
+/* =====================  VISTA 2: ANTECEDENTES (solo si es nueva)  ===================== */
+function vista_antecedentes(){
+  if(!esNueva){
+    // paciente conocida: confirma datos rápido y avanza
+    return `
+      <span class="pill">Paso 2 de 7</span>
+      <h2>¡Qué gusto verte de nuevo, ${datos.nombre.split(' ')[0]}! 👋</h2>
+      <div class="sub">Ya tenemos tus antecedentes registrados. ¿Ha cambiado algo?</div>
+      <div class="toggle-item"><span>Cesárea previa</span>
+        <label class="switch"><input type="checkbox" id="chk_cesarea" ${datos.cesareaPrevia==='si'?'checked':''}><span class="slider"></span></label>
+      </div>
+      <label>¿Algún medicamento nuevo o alergia nueva?</label>
+      <textarea id="in_trat_upd" placeholder="Déjalo en blanco si no hay cambios">${datos.tratamientoActual}</textarea>
+      <div class="btns">
+        <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
+        <button class="btn-primario" onclick="guardarAntecedentesConocida()">Continuar →</button>
+      </div>
+    `;
+  }
+  return `
+    <span class="pill">Paso 2 de 7</span>
+    <h2>Cuéntanos tu historia</h2>
+    <div class="sub">Es tu primer registro — esto nos ayuda a cuidarte mejor</div>
+    <label>Enfermedades médicas (diabetes, hipertensión, tiroides, etc.)</label>
+    <textarea id="in_med" placeholder="Ej: hipotiroidismo. Si ninguna, escribe 'ninguna'">${datos.antecedentesMedicos}</textarea>
+    <label>Cirugías previas</label>
+    <textarea id="in_qx" placeholder="Ej: apendicectomía 2018. Si ninguna, escribe 'ninguna'">${datos.antecedentesQuirurgicos}</textarea>
+    <label>Alergias a medicamentos</label>
+    <textarea id="in_alerg" placeholder="Ej: penicilina. Si ninguna, escribe 'ninguna'">${datos.alergias}</textarea>
+    <label>¿Tomas algún medicamento actualmente?</label>
+    <textarea id="in_trat" placeholder="Nombre y dosis si la sabes">${datos.tratamientoActual}</textarea>
+    <label>Grupo sanguíneo y factor (si lo sabes)</label>
+    <input type="text" id="in_grupo" placeholder="Ej: O+" value="${datos.grupoSanguineo}">
+    <div class="toggle-item"><span>¿Tuviste cesárea antes?</span>
+      <label class="switch"><input type="checkbox" id="chk_cesarea" ${datos.cesareaPrevia==='si'?'checked':''}><span class="slider"></span></label>
+    </div>
+    <div class="btns">
+      <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
+      <button class="btn-primario" onclick="guardarAntecedentesNueva()">Continuar →</button>
+    </div>
+  `;
+}
+
+function guardarAntecedentesNueva(){
+  datos.antecedentesMedicos = document.getElementById('in_med').value.trim() || 'ninguna';
+  datos.antecedentesQuirurgicos = document.getElementById('in_qx').value.trim() || 'ninguna';
+  datos.alergias = document.getElementById('in_alerg').value.trim() || 'ninguna';
+  datos.tratamientoActual = document.getElementById('in_trat').value.trim() || 'ninguno';
+  datos.grupoSanguineo = document.getElementById('in_grupo').value.trim();
+  datos.cesareaPrevia = document.getElementById('chk_cesarea').checked ? 'si' : 'no';
+  ir(1);
+}
+function guardarAntecedentesConocida(){
+  const upd = document.getElementById('in_trat_upd').value.trim();
+  if(upd) datos.tratamientoActual = upd;
+  datos.cesareaPrevia = document.getElementById('chk_cesarea').checked ? 'si' : 'no';
+  ir(1);
+}
+
+/* =====================  VISTA 3: GESTACIÓN  ===================== */
+function vista_gestacion(){
+  return `
+    <span class="pill">Paso 3 de 7</span>
+    <h2>Edad gestacional</h2>
+    <div class="sub">Ingresa la fecha de última regla (FUM) para calcular tu semana actual</div>
+    <label>Fecha de última regla (FUM)</label>
+    <input type="date" id="in_fum" value="${datos.fum}" max="${new Date().toISOString().split('T')[0]}" onchange="calcularGA()">
+    <div class="ga-box" id="ga_box">
+      <div class="num">—</div>
+      <div class="lbl">Ingresa tu FUM para calcular</div>
+    </div>
+    <div class="hint">Si no recuerdas tu FUM exacta o tu ciclo es irregular, indícalo aquí abajo y tu médico ajustará por ecografía.</div>
+    <textarea id="in_ga_obs" placeholder="Observaciones sobre tu fecha (opcional)"></textarea>
+    <div class="btns">
+      <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
+      <button class="btn-primario" onclick="guardarGestacion()">Continuar →</button>
+    </div>
+  `;
+}
+
+function calcularGA(){
+  const val = document.getElementById('in_fum').value;
+  if(!val) return;
+  const fum = new Date(val+'T00:00:00');
+  const hoy = new Date();
+  const dias = Math.floor((hoy - fum)/(1000*60*60*24));
+  if(dias < 0 || dias > 320){
+    document.getElementById('ga_box').innerHTML = `<div class="lbl" style="color:#c0453d">Fecha fuera de rango esperado, revisa por favor</div>`;
+    return;
+  }
+  const semanas = Math.floor(dias/7);
+  const diasRest = dias%7;
+  document.getElementById('ga_box').innerHTML = `
+    <div class="num">${semanas}<span style="font-size:1rem"> sem + ${diasRest} d</span></div>
+    <div class="lbl">Edad gestacional actual (calculada hoy, ${hoy.toLocaleDateString('es-PE')})</div>`;
+  datos.edadGestSemanasAlIngreso = semanas;
+  datos.edadGestDiasAlIngreso = diasRest;
+}
+
+function guardarGestacion(){
+  datos.fum = document.getElementById('in_fum').value;
+  if(!datos.fum){ alert('Ingresa la fecha de última regla'); return; }
+  datos.fechaIngresoGesta = new Date().toISOString().split('T')[0];
+  const obs = document.getElementById('in_ga_obs').value.trim();
+  if(obs) datos.otroSintoma = (datos.otroSintoma? datos.otroSintoma+' | ':'') + 'FUM obs: '+obs;
+  ir(1);
+}
+
+/* =====================  VISTA 4: SÍNTOMAS  ===================== */
+function chipRow(id, label, val){
+  return `
+  <label>${label}</label>
+  <div class="chip-group">
+    <div class="chip no ${val==='no'?'sel':''}" onclick="setChip('${id}','no',this)">No</div>
+    <div class="chip si ${val==='si'?'sel':''}" onclick="setChip('${id}','si',this)">Sí</div>
+  </div>`;
+}
+function setChip(id, val, el){
+  datos[id] = val;
+  el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function vista_sintomas(){
+  return `
+    <span class="pill">Paso 4 de 7</span>
+    <h2>¿Cómo te sientes hoy?</h2>
+    <div class="sub">Responde con sinceridad, nos ayuda a detectar señales a tiempo</div>
+    ${chipRow('movimientosFetales','¿Sientes que el bebé se mueve con normalidad?', datos.movimientosFetales)}
+    ${chipRow('sangrado','¿Sangrado vaginal?', datos.sangrado)}
+    ${chipRow('perdidaLiquido','¿Pérdida de líquido?', datos.perdidaLiquido)}
+    ${chipRow('cefalea','¿Dolor de cabeza intenso?', datos.cefalea)}
+    ${chipRow('visionBorrosa','¿Visión borrosa o puntos de luz (escotomas)?', datos.visionBorrosa)}
+    ${chipRow('dolorEpigastrico','¿Dolor en la boca del estómago?', datos.dolorEpigastrico)}
+    ${chipRow('tinnitus','¿Zumbido de oídos (tinnitus)?', datos.tinnitus)}
+    <label>¿Otro síntoma o molestia que quieras contarnos?</label>
+    <textarea id="in_otro" placeholder="Opcional">${datos.otroSintoma}</textarea>
+    <div class="btns">
+      <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
+      <button class="btn-primario" onclick="guardarSintomas()">Continuar →</button>
+    </div>
+  `;
+}
+function guardarSintomas(){
+  const otro = document.getElementById('in_otro').value.trim();
+  if(otro) datos.otroSintoma = (datos.otroSintoma? datos.otroSintoma+' | ':'') + otro;
+  ir(1);
+}
+
+/* =====================  VISTA 5: ECOGRAFÍAS  ===================== */
+function vista_ecografias(){
+  return `
+    <span class="pill">Paso 5 de 7</span>
+    <h2>Ecografías institucionales</h2>
+    <div class="sub">Solo cuentan las realizadas en nuestra institución</div>
+    ${chipRow('ecoGenetica','¿Te realizaste la ecografía genética (11-14 sem)?', datos.ecoGenetica)}
+    ${chipRow('ecoMorfologica','¿Te realizaste la ecografía morfológica (20-24 sem)?', datos.ecoMorfologica)}
+    ${chipRow('ecoPrevia','¿Tienes alguna otra ecografía previa reciente?', datos.ecoPrevia)}
+    <label>Observaciones de tus ecografías (opcional)</label>
+    <textarea id="in_eco_obs" placeholder="Ej: fecha aproximada, hallazgos que recuerdes">${datos.ecoObservaciones}</textarea>
+    <div class="btns">
+      <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
+      <button class="btn-primario" onclick="guardarEcografias()">Continuar →</button>
+    </div>
+  `;
+}
+function guardarEcografias(){
+  datos.ecoObservaciones = document.getElementById('in_eco_obs').value.trim();
+  ir(1);
+}
+
+/* =====================  VISTA 6: LABORATORIOS  ===================== */
+function vista_laboratorios(){
+  return `
+    <span class="pill">Paso 6 de 7</span>
+    <h2>Laboratorios</h2>
+    <div class="sub">¿Qué exámenes de sangre u orina te has realizado en este embarazo?</div>
+    <textarea id="in_labs" placeholder="Ej: hemograma, glucosa, VIH, VDRL, examen de orina... (los que recuerdes)">${datos.laboratorios}</textarea>
+    <div class="btns">
+      <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
+      <button class="btn-primario" onclick="guardarLabs()">Continuar →</button>
+    </div>
+  `;
+}
+function guardarLabs(){
+  datos.laboratorios = document.getElementById('in_labs').value.trim() || 'no refiere';
+  ir(1);
+}
+
+/* =====================  VISTA 7: FINAL  ===================== */
+function vista_final(){
+  return `
+    <div class="final">
+      <div class="check">✅</div>
+      <h2>¡Todo listo, ${datos.nombre.split(' ')[0]}!</h2>
+      <div class="sub">Revisa y confirma tu información antes de enviarla a tu médico</div>
+    </div>
+    <div class="toggle-item">
+      <span>Acepto que mis datos sean revisados por mi médico para mi control prenatal</span>
+      <label class="switch"><input type="checkbox" id="chk_acepta"><span class="slider"></span></label>
+    </div>
+    <div class="banner-alarma">
+      ⚠️ <b>Recuerda:</b> si presentas sangrado, pérdida de líquido, disminución de movimientos fetales, dolor de cabeza intenso, visión borrosa o dolor abdominal fuerte, acude de inmediato a Emergencia. No esperes tu próxima cita.
+    </div>
+    <div class="btns">
+      <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
+      <button class="btn-primario" id="btn_enviar" onclick="enviarTodo()">Enviar a mi médico ✓</button>
+    </div>
+  `;
+}
+
+async function enviarTodo(){
+  if(!document.getElementById('chk_acepta').checked){
+    alert('Por favor confirma que aceptas enviar tu información');
+    return;
+  }
+  datos.planAceptado = 'si';
+  const btn = document.getElementById('btn_enviar');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+
+  try{
+    if(esNueva){
+      await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({accion:'guardarPaciente', paciente:datos})});
+    } else {
+      await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({accion:'guardarPaciente', paciente:datos})});
+    }
+    await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({accion:'guardarConsulta', consulta:datos})});
+
+    document.getElementById('card').innerHTML = `
+      <div class="final">
+        <div class="check">💗</div>
+        <h2>¡Gracias, ${datos.nombre.split(' ')[0]}!</h2>
+        <div class="sub">Tu información fue enviada. Tu médico la revisará y te dará tus indicaciones.</div>
+      </div>`;
+  }catch(e){
+    btn.disabled = false; btn.textContent = 'Enviar a mi médico ✓';
+    alert('Hubo un problema al enviar. Verifica tu conexión e inténtalo de nuevo.');
+  }
+}
+
+render();
+</script>
+</body>
+</html>
