@@ -77,6 +77,18 @@ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxQ-IDYNgKZ_Ox_5RLMm
 const SESION_HORAS = 8; // la clave se vuelve a pedir después de este tiempo de inactividad de sesión
 let consultas = [];
 
+// Especialidad sugerida según la condición médica registrada por la paciente.
+// Se muestra junto a la interconsulta para que sepas a qué especialista referirla.
+const CONDICION_ESPECIALIDAD = {
+  'Diabetes gestacional/pregestacional': 'Endocrinología',
+  'Hipotiroidismo': 'Endocrinología',
+  'Hipertensión crónica': 'Cardiología',
+  'Cardiopatía': 'Cardiología',
+  'Asma / enfermedad pulmonar': 'Neumología',
+  'Enfermedad renal': 'Nefrología',
+  'Enfermedad autoinmune (lupus, etc.)': 'Reumatología'
+};
+
 /* ============ MODO OSCURO ============ */
 function toggleModo(){
   const html = document.documentElement;
@@ -100,6 +112,8 @@ if(WEBAPP_URL.indexOf('PEGA_AQUI')>=0){
 }
 
 /* ============ CLAVE CON EXPIRACIÓN ============ */
+// Por seguridad (datos médicos), la clave guardada en este navegador expira
+// sola después de SESION_HORAS horas. Pasado ese tiempo se vuelve a pedir.
 function getClave(){
   let sesion = null;
   try{ sesion = JSON.parse(localStorage.getItem('sesionDoctor') || 'null'); }catch(e){}
@@ -238,15 +252,18 @@ async function verDetalle(i){
         <div class="cond-row"><span>Nutrición</span><span class="nota">de rutina</span></div>
         <div class="cond-row"><span>Odontología</span><span class="nota">de rutina</span></div>
         <div class="cond-row"><span>Psicología (tamizaje)</span><span class="nota">de rutina</span></div>
-        ${condiciones.map((cond,idx)=>`
+        ${condiciones.map((cond,idx)=>{
+          const especialidad = CONDICION_ESPECIALIDAD[cond.nombre];
+          return `
           <div class="cond-row">
-            <span>${cond.nombre}</span>
+            <span>${cond.nombre}${especialidad ? ` <span class="nota">→ Interconsulta a ${especialidad}</span>` : ''}</span>
             <select class="estado" onchange="cambiarEstadoCondicion('${c.dni}', ${idx}, this.value)">
               <option value="pendiente" ${cond.estado==='pendiente'?'selected':''}>Pendiente</option>
               <option value="en_seguimiento" ${cond.estado==='en_seguimiento'?'selected':''}>En seguimiento</option>
               <option value="atendido" ${cond.estado==='atendido'?'selected':''}>Atendido</option>
             </select>
-          </div>`).join('')}
+          </div>`;
+        }).join('')}
         ${rec.interconsultasExtra.map(v=>`<div class="cond-row"><span>${v}</span></div>`).join('')}
       </div>
 
@@ -285,7 +302,7 @@ function formularioReferenciaGA(c){
 }
 
 function mostrarEdicionGA(dni){
-  const c = consultas.find(x=>x.dni===dni);
+  const c = consultas.find(x=>String(x.dni)===String(dni));
   const hoy = new Date().toISOString().split('T')[0];
   document.getElementById('edicionGA').innerHTML = `
     <div class="fila-ga" style="margin-top:8px">
@@ -306,22 +323,27 @@ async function guardarReferenciaGA(dni){
   try{ sesion = JSON.parse(localStorage.getItem('sesionDoctor')||'null'); }catch(e){}
   const clave = sesion ? sesion.clave : '';
   try{
-    await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({
+    const res = await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({
       accion:'guardarReferenciaGA', clave, dni,
       fechaEcoReferencia: fecha, semanasEcoReferencia: semanas, diasEcoReferencia: dias, fpp
     })});
-  }catch(e){ alert('No se pudo guardar. Intenta de nuevo.'); return; }
+    const json = await res.json();
+    if(!json.ok){ alert('No se pudo guardar: ' + (json.error||'error desconocido') + '. Si tu sesión expiró, recarga la página.'); return; }
+  }catch(e){ alert('No se pudo guardar. Verifica tu conexión e inténtalo de nuevo.'); return; }
+  // actualiza en memoria todas las consultas de esa paciente para que se recalculen al vuelo
+  // (dni puede llegar como string desde el onclick y c.dni como number desde la hoja: comparar como texto)
   consultas.forEach(c=>{
-    if(c.dni===dni){
+    if(String(c.dni)===String(dni)){
       c.fechaEcoReferencia = fecha; c.semanasEcoReferencia = semanas; c.diasEcoReferencia = dias; c.fpp = fpp;
     }
   });
-  const idx = consultas.findIndex(c=>c.dni===dni);
+  const idx = consultas.findIndex(c=>String(c.dni)===String(dni));
   if(idx>=0) verDetalle(idx);
+  else alert('Se guardó, pero no se pudo refrescar la vista automáticamente. Vuelve a abrir la ficha de la paciente.');
 }
 
 async function cambiarEstadoCondicion(dni, idx, nuevoEstado){
-  const c = consultas.find(x=>x.dni===dni);
+  const c = consultas.find(x=>String(x.dni)===String(dni));
   if(!c) return;
   let condiciones = [];
   try{ condiciones = JSON.parse(c.condicionesJSON||'[]'); }catch(e){}
@@ -334,7 +356,7 @@ async function cambiarEstadoCondicion(dni, idx, nuevoEstado){
   const clave = sesion ? sesion.clave : '';
   try{
     await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({accion:'actualizarCondiciones', clave, dni, condiciones: nuevoJSON})});
-  }catch(e){ }
+  }catch(e){ /* si falla, queda igual en el sheet y se puede reintentar */ }
 }
 
 async function cargarCurvas(dni){
@@ -350,7 +372,7 @@ async function cargarCurvas(dni){
       el.innerHTML = '<p class="nota">Se necesitan al menos 2 controles para mostrar la curva.</p>';
       return;
     }
-    const hist = json.historial.slice().reverse();
+    const hist = json.historial.slice().reverse(); // orden cronológico
     el.innerHTML = `
       <p class="nota" style="margin-top:10px">Curva de peso (kg)</p>
       ${chartSVG(hist.map(h=>parseFloat(h.peso)).filter(v=>!isNaN(v)))}
@@ -406,6 +428,7 @@ function calcularFPPDesde(fechaEcoStr, semanas, dias){
   return fpp.toISOString().split('T')[0];
 }
 
+/* ============ MOTOR DE RECOMENDACIONES (esquema MINSA Perú + evidencia reciente) ============ */
 function generarRecomendaciones(ga, c){
   if(ga.sinReferencia){
     return {
@@ -484,7 +507,11 @@ function generarMensaje(c, ga, rec){
   let condiciones = [];
   try{ condiciones = JSON.parse(c.condicionesJSON||'[]'); }catch(e){}
   const condTxt = condiciones.length
-    ? condiciones.map(cd=>`${cd.nombre} (${cd.estado==='pendiente'?'interconsulta pendiente':cd.estado==='en_seguimiento'?'en seguimiento':'atendido'})`).join('; ')
+    ? condiciones.map(cd=>{
+        const especialidad = CONDICION_ESPECIALIDAD[cd.nombre];
+        const estadoTxt = cd.estado==='pendiente'?'interconsulta pendiente':cd.estado==='en_seguimiento'?'en seguimiento':'atendido';
+        return `${cd.nombre}${especialidad?` (${especialidad})`:''} — ${estadoTxt}`;
+      }).join('; ')
     : 'ninguna registrada';
 
   const gaTxt = ga.sinReferencia
