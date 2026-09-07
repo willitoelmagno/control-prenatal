@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Médico — Control Prenatal</title>
+<style>
+  :root{
+    --rosa:#d16b96; --lila:#7c6ba8; --fondo:#f6f4fb; --card:#fff; --borde:#e6e0f0;
+    --texto:#2f2a3a; --ok:#3fa876; --alerta:#d9463c; --amarillo:#c98a1c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'Segoe UI',system-ui,sans-serif; background:var(--fondo); color:var(--texto);}
+  header{background:linear-gradient(135deg,var(--rosa),var(--lila)); color:#fff; padding:18px 24px;}
+  header h1{margin:0; font-size:1.2rem;}
+  .layout{display:flex; min-height:calc(100vh - 60px);}
+  .lista{width:320px; background:#fff; border-right:1px solid var(--borde); overflow-y:auto; flex:none;}
+  .lista .item{padding:14px 18px; border-bottom:1px solid var(--borde); cursor:pointer;}
+  .lista .item:hover{background:#faf6fc;}
+  .lista .item.sel{background:#f1e9f7; border-left:4px solid var(--rosa);}
+  .lista .item b{display:block; font-size:.95rem;}
+  .lista .item .meta{font-size:.75rem; color:#8a8296;}
+  .lista .badge{display:inline-block; font-size:.68rem; padding:2px 8px; border-radius:999px; margin-top:4px;}
+  .badge.alerta{background:#fbe4e2; color:var(--alerta);}
+  .badge.ok{background:#e2f4ea; color:var(--ok);}
+  .detalle{flex:1; padding:22px 28px; overflow-y:auto;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;}
+  .box{background:var(--card); border:1px solid var(--borde); border-radius:14px; padding:16px 18px;}
+  .box h3{margin:0 0 10px; font-size:.95rem; color:var(--lila);}
+  .box ul{margin:0; padding-left:18px; font-size:.88rem; line-height:1.6;}
+  .box p{margin:4px 0; font-size:.88rem;}
+  .pendiente{color:var(--amarillo); font-weight:600;}
+  .hecho{color:var(--ok); font-weight:600;}
+  .alarma-si{color:var(--alerta); font-weight:700;}
+  textarea#mensajeFinal{
+    width:100%; min-height:340px; font-family:'Consolas',monospace; font-size:.85rem;
+    padding:14px; border-radius:12px; border:1.5px solid var(--borde); line-height:1.5;
+  }
+  .btn{padding:10px 18px; border:none; border-radius:10px; background:var(--rosa); color:#fff; font-weight:700; cursor:pointer; margin-top:10px;}
+  .btn:active{transform:scale(.97);}
+  .top-ga{font-size:1.4rem; font-weight:800; color:var(--rosa);}
+  .empty{padding:60px; text-align:center; color:#a89cb5;}
+  .cfg{padding:10px 24px; font-size:.8rem; background:#fff3e0; color:#8a6d3b;}
+</style>
+</head>
+<body>
+<header><h1>🩺 Panel Médico — Control Prenatal</h1></header>
+<div class="cfg" id="cfgWarn"></div>
+<div class="layout">
+  <div class="lista" id="lista"><div class="empty">Cargando pacientes…</div></div>
+  <div class="detalle" id="detalle"><div class="empty">Selecciona una paciente de la lista</div></div>
+</div>
+
+<script>
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxQ-IDYNgKZ_Ox_5RLMm8WjiMMDaE0tOLBUzf46wRmDJiW4OthlgKHE3FoVjqyixVH96A/exec";
+let consultas = [];
+
+if(WEBAPP_URL.indexOf('PEGA_AQUI')>=0){
+  document.getElementById('cfgWarn').textContent = '⚠️ Configura WEBAPP_URL en este archivo con la URL de tu Apps Script (ver Code.gs).';
+} else {
+  document.getElementById('cfgWarn').style.display='none';
+}
+
+function getClave(){
+  let clave = '';
+  try{ clave = localStorage.getItem('claveDoctor') || ''; }catch(e){}
+  if(!clave){
+    clave = prompt('Ingresa tu clave de acceso al panel:') || '';
+    try{ localStorage.setItem('claveDoctor', clave); }catch(e){}
+  }
+  return clave;
+}
+
+async function cargar(){
+  try{
+    const clave = getClave();
+    const res = await fetch(`${WEBAPP_URL}?accion=listarConsultas&clave=${encodeURIComponent(clave)}`);
+    const json = await res.json();
+    if(!json.ok){
+      try{ localStorage.removeItem('claveDoctor'); }catch(e){}
+      document.getElementById('lista').innerHTML = '<div class="empty">Clave incorrecta. Recarga la página e inténtalo de nuevo.</div>';
+      return;
+    }
+    consultas = json.consultas || [];
+    pintarLista();
+  }catch(e){
+    document.getElementById('lista').innerHTML = '<div class="empty">No se pudo conectar. Revisa WEBAPP_URL.</div>';
+  }
+}
+
+function tieneAlarma(c){
+  return ['sangrado','perdidaLiquido','cefalea','visionBorrosa','dolorEpigastrico','tinnitus','escotomas']
+    .some(k => c[k]==='si') || c.movimientosFetales==='no';
+}
+
+function pintarLista(){
+  const el = document.getElementById('lista');
+  if(!consultas.length){ el.innerHTML = '<div class="empty">Aún no hay registros</div>'; return; }
+  el.innerHTML = consultas.map((c,i)=>{
+    const alarma = tieneAlarma(c);
+    return `<div class="item" onclick="verDetalle(${i})" id="item${i}">
+      <b>${c.nombre}</b>
+      <span class="meta">DNI ${c.dni} · ${c.edadGestSemanasAlIngreso}sem+${c.edadGestDiasAlIngreso}d</span>
+      <div class="badge ${alarma?'alerta':'ok'}">${alarma?'⚠ Revisar síntomas':'Sin alarma'}</div>
+    </div>`;
+  }).join('');
+}
+
+function verDetalle(i){
+  document.querySelectorAll('.item').forEach(e=>e.classList.remove('sel'));
+  document.getElementById('item'+i).classList.add('sel');
+  const c = consultas[i];
+  const ga = calcularGAHoy(c);
+  const rec = generarRecomendaciones(ga, c);
+  const mensaje = generarMensaje(c, ga, rec);
+
+  document.getElementById('detalle').innerHTML = `
+    <div class="top-ga">${c.nombre} — ${ga.semanas} sem + ${ga.dias} d <span style="font-size:.9rem;color:#8a8296">(al día de hoy)</span></div>
+    <div style="font-size:.85rem;color:#8a8296">DNI: ${c.dni} · FUM: ${c.fum}</div>
+
+    <div class="grid">
+      <div class="box">
+        <h3>Síntomas de alarma reportados</h3>
+        ${sintomaLinea('Movimientos fetales', c.movimientosFetales, true)}
+        ${sintomaLinea('Sangrado', c.sangrado)}
+        ${sintomaLinea('Pérdida de líquido', c.perdidaLiquido)}
+        ${sintomaLinea('Cefalea', c.cefalea)}
+        ${sintomaLinea('Visión borrosa', c.visionBorrosa)}
+        ${sintomaLinea('Dolor epigástrico', c.dolorEpigastrico)}
+        ${sintomaLinea('Tinnitus', c.tinnitus)}
+        ${sintomaLinea('Escotomas', c.escotomas)}
+        ${c.otroSintoma? `<p><b>Otro:</b> ${c.otroSintoma}</p>`:''}
+      </div>
+
+      <div class="box">
+        <h3>Ecografías institucionales</h3>
+        ${sintomaLinea('Genética (11-14 sem)', c.ecoGenetica)}
+        ${sintomaLinea('Morfológica (20-24 sem)', c.ecoMorfologica)}
+        ${sintomaLinea('Otra previa', c.ecoPrevia)}
+        ${c.ecoObservaciones? `<p><b>Obs:</b> ${c.ecoObservaciones}</p>`:''}
+        <h3 style="margin-top:14px">Laboratorios referidos</h3>
+        <p>${c.laboratorios || 'no refiere'}</p>
+      </div>
+
+      <div class="box">
+        <h3>Vacunas recomendadas</h3>
+        <ul>${rec.vacunas.map(v=>`<li class="${v.hecha?'hecho':'pendiente'}">${v.texto}</li>`).join('')}</ul>
+      </div>
+
+      <div class="box">
+        <h3>Laboratorios pendientes (según semana)</h3>
+        <ul>${rec.labs.map(v=>`<li class="pendiente">${v}</li>`).join('')}</ul>
+      </div>
+
+      <div class="box">
+        <h3>Estudios de imagen pendientes</h3>
+        <ul>${rec.imagenes.map(v=>`<li class="pendiente">${v}</li>`).join('')}</ul>
+      </div>
+
+      <div class="box">
+        <h3>Interconsultas</h3>
+        <ul>${rec.interconsultas.map(v=>`<li class="pendiente">${v}</li>`).join('')}</ul>
+      </div>
+
+      ${c.cesareaPrevia==='si' ? `
+      <div class="box" style="grid-column:1/-1">
+        <h3>Preparación quirúrgica (cesárea previa / programada)</h3>
+        <ul>${rec.quirurgico.map(v=>`<li class="pendiente">${v}</li>`).join('')}</ul>
+      </div>` : ''}
+
+      <div class="box" style="grid-column:1/-1">
+        <h3>📋 Mensaje para copiar y pegar en la receta / indicaciones</h3>
+        <textarea id="mensajeFinal" readonly>${mensaje}</textarea>
+        <button class="btn" onclick="copiarMensaje()">Copiar mensaje</button>
+      </div>
+    </div>
+  `;
+}
+
+function sintomaLinea(label, val, normalEsSi){
+  const esAlarma = normalEsSi ? val==='no' : val==='si';
+  return `<p>${label}: <span class="${esAlarma?'alarma-si':''}">${val==='si'?'Sí':'No'}</span></p>`;
+}
+
+function calcularGAHoy(c){
+  const fum = new Date(c.fum+'T00:00:00');
+  const hoy = new Date();
+  const dias = Math.max(0, Math.floor((hoy-fum)/(1000*60*60*24)));
+  return { semanas: Math.floor(dias/7), dias: dias%7, diasTotal: dias };
+}
+
+/* ============ MOTOR DE RECOMENDACIONES ============ */
+function generarRecomendaciones(ga, c){
+  const s = ga.semanas;
+  const vacunas = [
+    { texto:'Influenza (cualquier trimestre, temporada)', hecha:false },
+    { texto:'Tdap (Tétanos-Difteria-Pertussis) 27-36 semanas', hecha: s<27 }
+  ];
+
+  const labs = [];
+  if(s < 14){
+    labs.push('Hemograma completo, grupo sanguíneo y factor Rh');
+    labs.push('Glucosa basal, VIH, VDRL/RPR, HBsAg');
+    labs.push('Toxoplasmosis IgG/IgM');
+    labs.push('Examen de orina + urocultivo');
+    labs.push('Papanicolaou (si no tiene vigente)');
+  } else if(s < 24){
+    labs.push('Control de hemograma');
+    labs.push('Urocultivo de control');
+  } else if(s < 28){
+    labs.push('PTOG (test de tolerancia a la glucosa) 24-28 sem');
+    labs.push('Hemograma de control (descartar anemia)');
+  } else if(s < 35){
+    labs.push('VIH y VDRL de control (tercer trimestre)');
+    labs.push('Hemograma de control');
+  } else {
+    labs.push('Cultivo rectovaginal para Streptococo del grupo B (35-37 sem)');
+    labs.push('Perfil de coagulación pre-parto');
+  }
+
+  const imagenes = [];
+  if(s < 14 && c.ecoGenetica !== 'si') imagenes.push('Ecografía genética / translucencia nucal (11-14 sem)');
+  if(s >= 14 && s < 24 && c.ecoMorfologica !== 'si') imagenes.push('Ecografía morfológica (20-24 sem)');
+  if(s >= 24 && s < 32) imagenes.push('Ecografía de crecimiento fetal (28-32 sem)');
+  if(s >= 32 && s < 37) imagenes.push('Ecografía Doppler / perfil biofísico (34-36 sem) si está indicado');
+  if(imagenes.length===0) imagenes.push('Sin estudio de imagen pendiente por semana actual');
+
+  const interconsultas = ['Nutrición', 'Odontología', 'Psicología (tamizaje)'];
+  const ant = (c.antecedentesMedicos||'').toLowerCase();
+  if(ant.includes('diabet') || ant.includes('tiroid')) interconsultas.push('Endocrinología (por antecedente)');
+  if(ant.includes('asma') || ant.includes('pulm')) interconsultas.push('Neumología (por antecedente)');
+  if(ant.includes('cardi')) interconsultas.push('Cardiología (por antecedente)');
+  if(s >= 34 && c.cesareaPrevia==='si') interconsultas.push('Evaluación pre-anestésica (36 sem aprox.)');
+
+  const quirurgico = [
+    'Perfil preoperatorio: hemograma, grupo y factor, PT/TTPA, glucosa, urea, creatinina',
+    'VIH, HBsAg (si no vigentes)',
+    'Riesgo quirúrgico / evaluación cardiológica',
+    'Reserva de sangre (coordinar con banco de sangre)',
+    'Programar fecha de cesárea (idealmente 38-39 sem)'
+  ];
+
+  return { vacunas, labs, imagenes, interconsultas, quirurgico };
+}
+
+function generarMensaje(c, ga, rec){
+  const alarmaTxt = tieneAlarma(c)
+    ? '⚠️ La paciente refiere síntomas que requieren evaluación — revisar antes de continuar el plan.'
+    : 'Sin síntomas de alarma reportados hoy.';
+
+  return `CONTROL PRENATAL — ${c.nombre} (DNI ${c.dni})
+Edad gestacional: ${ga.semanas} semanas + ${ga.dias} días (FUM: ${c.fum})
+${alarmaTxt}
+
+INDICACIONES:
+- Sulfato ferroso 1 tableta VO, 1 hora antes o 2 horas después de las comidas, idealmente con cítricos.
+- Ácido fólico 1 tableta VO cada 24 horas por 30 días (si primer trimestre).
+- Calcio 1 tableta VO cada 24 horas por 30 días.
+- Metildopa 250mg VO cada 8 horas (solo si hipertensión indicada por su médico).
+
+PENDIENTES:
+- Laboratorios: ${rec.labs.join('; ')}
+- Imágenes: ${rec.imagenes.join('; ')}
+- Interconsultas: ${rec.interconsultas.join('; ')}
+- Vacunas: ${rec.vacunas.filter(v=>!v.hecha).map(v=>v.texto).join('; ') || 'al día'}
+
+SIGNOS DE ALARMA — acudir a Emergencia de inmediato si presenta:
+Sangrado vaginal, pérdida de líquido, disminución de movimientos fetales, dolor de cabeza intenso,
+visión borrosa, dolor en la boca del estómago, zumbido de oídos o convulsiones.
+
+La paciente refiere haber comprendido el plan de trabajo, sus pendientes y los signos de alarma,
+y acepta continuar con el seguimiento del embarazo.`;
+}
+
+function copiarMensaje(){
+  const ta = document.getElementById('mensajeFinal');
+  ta.select();
+  document.execCommand('copy');
+  alert('Mensaje copiado ✓');
+}
+
+cargar();
+</script>
+</body>
+</html>
