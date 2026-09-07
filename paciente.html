@@ -142,7 +142,7 @@ function toggleModo(){
 /* =====================  ESTADO  ===================== */
 let paso = 0;
 let esNueva = true;
-let yaTieneGesta = false; // true si ya se calculó la FUM en un contacto anterior
+let tieneReferenciaGA = false; // true si el médico ya fijó la edad gestacional de referencia
 const LISTA_CONDICIONES = ['Diabetes gestacional/pregestacional','Hipotiroidismo','Hipertensión crónica','Asma / enfermedad pulmonar','Cardiopatía','Enfermedad renal','Enfermedad autoinmune (lupus, etc.)'];
 const LISTA_RIESGO_PREECLAMPSIA = ['Primer embarazo (nulípara)','Hipertensión crónica','Diabetes (pregestacional o gestacional)','Enfermedad renal','Enfermedad autoinmune','Embarazo múltiple','IMC mayor a 30','Antecedente de preeclampsia en embarazo previo','Edad mayor a 35 años'];
 const LISTA_LABS = ['Hemograma completo','Grupo sanguíneo y factor Rh','Glucosa basal','VIH','Sífilis (RPR/VDRL)','Hepatitis B (HBsAg)','Toxoplasmosis IgG/IgM','Examen de orina completo','Papanicolaou','Prueba de tolerancia a la glucosa (PTOG)','Cultivo rectovaginal (Estreptococo grupo B)'];
@@ -152,7 +152,8 @@ const datos = {
   antecedentesMedicos:'', antecedentesQuirurgicos:'', alergias:'', tratamientoActual:'',
   cesareaPrevia:'no', grupoSanguineo:'',
   condicionesJSON:'[]', factoresRiesgoPreeclampsiaJSON:'[]',
-  fum:'', edadGestSemanasAlIngreso:0, edadGestDiasAlIngreso:0, fechaIngresoGesta:'', fpp:'',
+  fechaEcoReferencia:'', semanasEcoReferencia:'', diasEcoReferencia:'',
+  edadGestSemanasAlIngreso:'', edadGestDiasAlIngreso:'', fpp:'',
   peso:'', presionSistolica:'', presionDiastolica:'',
   movimientosFetales:'si', sangrado:'no', perdidaLiquido:'no',
   cefalea:'no', visionBorrosa:'no', dolorEpigastrico:'no', tinnitus:'no', escotomas:'no', otroSintoma:'',
@@ -212,13 +213,13 @@ async function buscarPaciente(){
       datos.grupoSanguineo = p.grupoSanguineo||'';
       datos.condicionesJSON = p.condicionesJSON || '[]';
       datos.factoresRiesgoPreeclampsiaJSON = p.factoresRiesgoPreeclampsiaJSON || '[]';
-      if(p.fum){
-        yaTieneGesta = true;
-        datos.fum = p.fum;
-        datos.fechaIngresoGesta = p.fechaIngresoGesta || '';
+      if(p.fechaEcoReferencia && p.semanasEcoReferencia !== ''){
+        tieneReferenciaGA = true;
+        datos.fechaEcoReferencia = p.fechaEcoReferencia;
+        datos.semanasEcoReferencia = p.semanasEcoReferencia;
+        datos.diasEcoReferencia = p.diasEcoReferencia || 0;
         datos.fpp = p.fpp || '';
-        datos.edadGestSemanasAlIngreso = p.edadGestSemanasAlIngreso || 0;
-        datos.edadGestDiasAlIngreso = p.edadGestDiasAlIngreso || 0;
+        calcularGAHoyDesdeReferencia();
       }
     } else {
       esNueva = true;
@@ -332,26 +333,33 @@ function guardarAntecedentesConocida(){
   ir(1);
 }
 
-/* =====================  VISTA 3: GESTACIÓN  ===================== */
-function calcularFPP(fumStr){
-  const fum = new Date(fumStr+'T00:00:00');
-  const fpp = new Date(fum.getTime() + 280*24*60*60*1000);
-  return fpp.toISOString().split('T')[0];
+/* =====================  VISTA 3: GESTACIÓN (la fija el médico, no la paciente)  ===================== */
+// La edad gestacional NO se calcula con la fecha de última regla, porque
+// institucionalmente no se toma como dato confiable. La fija el médico una
+// sola vez (habitualmente con la ecografía del primer trimestre, aunque
+// puede usar la que él considere) desde el panel médico. Aquí solo se
+// muestra el resultado, calculado hacia adelante desde esa referencia.
+function calcularGAHoyDesdeReferencia(){
+  if(!datos.fechaEcoReferencia || datos.semanasEcoReferencia===''){ return; }
+  const fechaRef = new Date(datos.fechaEcoReferencia+'T00:00:00');
+  const hoy = new Date();
+  const diasTranscurridos = Math.max(0, Math.floor((hoy - fechaRef)/(1000*60*60*24)));
+  const diasTotalesRef = (Number(datos.semanasEcoReferencia)*7) + Number(datos.diasEcoReferencia||0);
+  const diasTotalHoy = diasTotalesRef + diasTranscurridos;
+  datos.edadGestSemanasAlIngreso = Math.floor(diasTotalHoy/7);
+  datos.edadGestDiasAlIngreso = diasTotalHoy%7;
 }
 
 function vista_gestacion(){
-  if(yaTieneGesta && datos.fum){
-    const fum = new Date(datos.fum+'T00:00:00');
+  if(tieneReferenciaGA){
     const hoy = new Date();
-    const dias = Math.max(0, Math.floor((hoy-fum)/(1000*60*60*24)));
-    const semanas = Math.floor(dias/7), diasRest = dias%7;
     const fppTxt = datos.fpp ? new Date(datos.fpp+'T00:00:00').toLocaleDateString('es-PE') : '—';
     return `
       <span class="pill">Paso 3 de 8</span>
       <h2>Tu embarazo hoy</h2>
-      <div class="sub">Ya registramos tu fecha de última regla en un control anterior</div>
+      <div class="sub">Tu médico calculó tu edad gestacional con tu ecografía</div>
       <div class="ga-box">
-        <div class="num">${semanas}<span style="font-size:1rem"> sem + ${diasRest} d</span></div>
+        <div class="num">${datos.edadGestSemanasAlIngreso}<span style="font-size:1rem"> sem + ${datos.edadGestDiasAlIngreso} d</span></div>
         <div class="lbl">Edad gestacional actual (calculada hoy, ${hoy.toLocaleDateString('es-PE')})</div>
         <div class="fpp">📅 Fecha probable de parto: <b>${fppTxt}</b></div>
       </div>
@@ -364,52 +372,15 @@ function vista_gestacion(){
   return `
     <span class="pill">Paso 3 de 8</span>
     <h2>Edad gestacional</h2>
-    <div class="sub">Este es tu primer control con nosotros: ingresa tu fecha de última regla (FUM). No te la volveremos a pedir.</div>
-    <label>Fecha de última regla (FUM)</label>
-    <input type="date" id="in_fum" value="${datos.fum}" max="${new Date().toISOString().split('T')[0]}" onchange="calcularGA()">
-    <div class="ga-box" id="ga_box">
-      <div class="num">—</div>
-      <div class="lbl">Ingresa tu FUM para calcular</div>
+    <div class="sub">Tu médico determinará tu edad gestacional con tu ecografía (habitualmente la del primer trimestre) y quedará registrada para tus próximos controles. Por ahora, continuemos con el resto.</div>
+    <div class="ga-box">
+      <div class="lbl">Pendiente de que tu médico la registre</div>
     </div>
-    <div class="hint">Si no recuerdas tu FUM exacta o tu ciclo es irregular, indícalo aquí abajo y tu médico ajustará por ecografía.</div>
-    <textarea id="in_ga_obs" placeholder="Observaciones sobre tu fecha (opcional)"></textarea>
     <div class="btns">
       <button class="btn-secundario" onclick="ir(-1)">← Atrás</button>
-      <button class="btn-primario" onclick="guardarGestacion()">Continuar →</button>
+      <button class="btn-primario" onclick="ir(1)">Continuar →</button>
     </div>
   `;
-}
-
-function calcularGA(){
-  const val = document.getElementById('in_fum').value;
-  if(!val) return;
-  const fum = new Date(val+'T00:00:00');
-  const hoy = new Date();
-  const dias = Math.floor((hoy - fum)/(1000*60*60*24));
-  if(dias < 0 || dias > 320){
-    document.getElementById('ga_box').innerHTML = `<div class="lbl" style="color:#c0453d">Fecha fuera de rango esperado, revisa por favor</div>`;
-    return;
-  }
-  const semanas = Math.floor(dias/7);
-  const diasRest = dias%7;
-  const fpp = calcularFPP(val);
-  document.getElementById('ga_box').innerHTML = `
-    <div class="num">${semanas}<span style="font-size:1rem"> sem + ${diasRest} d</span></div>
-    <div class="lbl">Edad gestacional actual (calculada hoy, ${hoy.toLocaleDateString('es-PE')})</div>
-    <div class="fpp">📅 Fecha probable de parto: <b>${new Date(fpp+'T00:00:00').toLocaleDateString('es-PE')}</b></div>`;
-  datos.edadGestSemanasAlIngreso = semanas;
-  datos.edadGestDiasAlIngreso = diasRest;
-  datos.fpp = fpp;
-}
-
-function guardarGestacion(){
-  datos.fum = document.getElementById('in_fum').value;
-  if(!datos.fum){ alert('Ingresa la fecha de última regla'); return; }
-  datos.fechaIngresoGesta = new Date().toISOString().split('T')[0];
-  if(!datos.fpp) datos.fpp = calcularFPP(datos.fum);
-  const obs = document.getElementById('in_ga_obs').value.trim();
-  if(obs) datos.otroSintoma = (datos.otroSintoma? datos.otroSintoma+' | ':'') + 'FUM obs: '+obs;
-  ir(1);
 }
 
 /* =====================  VISTA 4: VITALES  ===================== */
@@ -558,6 +529,7 @@ async function enviarTodo(){
     return;
   }
   datos.planAceptado = 'si';
+  if(tieneReferenciaGA) calcularGAHoyDesdeReferencia();
   const btn = document.getElementById('btn_enviar');
   btn.disabled = true; btn.textContent = 'Enviando...';
 
