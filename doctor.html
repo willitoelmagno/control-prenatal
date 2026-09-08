@@ -160,9 +160,11 @@ function pintarLista(){
   } else {
     html = consultas.map((c,i)=>{
       const alarma = tieneAlarma(c);
+      const ga = calcularGAHoy(c);
+      const gaTxt = ga.sinReferencia ? 'GA sin registrar' : `${ga.semanas}sem+${ga.dias}d`;
       return `<div class="item" onclick="verDetalle(${i})" id="item${i}">
         <b>${c.nombre}</b>
-        <span class="meta">DNI ${c.dni} · ${c.edadGestSemanasAlIngreso}sem+${c.edadGestDiasAlIngreso}d</span>
+        <span class="meta">DNI ${c.dni} · ${gaTxt}</span>
         <div class="badge ${alarma?'alerta':'ok'}">${alarma?'⚠ Revisar síntomas':'Sin alarma'}</div>
       </div>`;
     }).join('');
