@@ -59,6 +59,11 @@
   .fila-ga{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px;}
   .fila-ga input{padding:8px 10px; border-radius:8px; border:1px solid var(--borde); background:var(--card); color:var(--texto); font-size:.85rem;}
   .fila-ga .btn{margin-top:0;}
+  .fecha-bar{padding:12px 16px; border-bottom:1px solid var(--borde); background:var(--fondo);}
+  .fecha-tabs{display:flex; gap:6px;}
+  .fecha-tabs button{flex:1; padding:7px 4px; border:1px solid var(--borde); background:var(--card); color:var(--texto); border-radius:8px; font-size:.8rem; cursor:pointer;}
+  .fecha-tabs button.activo{background:var(--rosa); border-color:var(--rosa); color:#fff; font-weight:700;}
+  .fecha-resumen{font-size:.72rem; color:var(--muted); margin-top:8px;}
 </style>
 </head>
 <body>
@@ -76,6 +81,7 @@
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxQ-IDYNgKZ_Ox_5RLMm8WjiMMDaE0tOLBUzf46wRmDJiW4OthlgKHE3FoVjqyixVH96A/exec";
 const SESION_HORAS = 8; // la clave se vuelve a pedir después de este tiempo de inactividad de sesión
 let consultas = [];
+let filtroFecha = 'hoy'; // 'hoy' | 'todas'
 
 // Especialidad sugerida según la condición médica registrada por la paciente.
 // Se muestra junto a la interconsulta para que sepas a qué especialista referirla.
@@ -152,13 +158,37 @@ function tieneAlarma(c){
     .some(k => c[k]==='si') || c.movimientosFetales==='no';
 }
 
+function esHoy(timestamp){
+  if(!timestamp) return false;
+  const f = new Date(timestamp);
+  const hoy = new Date();
+  return f.getFullYear()===hoy.getFullYear() && f.getMonth()===hoy.getMonth() && f.getDate()===hoy.getDate();
+}
+
+function cambiarFiltroFecha(valor){
+  filtroFecha = valor;
+  pintarLista();
+}
+
 function pintarLista(){
   const el = document.getElementById('lista');
+  const visibles = filtroFecha==='hoy' ? consultas.filter(c=>esHoy(c.timestamp)) : consultas;
+
+  let barra = `
+    <div class="fecha-bar">
+      <div class="fecha-tabs">
+        <button class="${filtroFecha==='hoy'?'activo':''}" onclick="cambiarFiltroFecha('hoy')">Hoy</button>
+        <button class="${filtroFecha==='todas'?'activo':''}" onclick="cambiarFiltroFecha('todas')">Todas</button>
+      </div>
+      <div class="fecha-resumen">${visibles.length} paciente${visibles.length===1?'':'s'} ${filtroFecha==='hoy' ? 'registrada'+(visibles.length===1?'':'s')+' hoy' : 'en total'}</div>
+    </div>`;
+
   let html = '';
-  if(!consultas.length){
-    html = '<div class="empty">Aún no hay registros</div>';
+  if(!visibles.length){
+    html = `<div class="empty">${filtroFecha==='hoy' ? 'Aún no hay registros de hoy' : 'Aún no hay registros'}</div>`;
   } else {
-    html = consultas.map((c,i)=>{
+    html = visibles.map((c)=>{
+      const i = consultas.indexOf(c);
       const alarma = tieneAlarma(c);
       const ga = calcularGAHoy(c);
       const gaTxt = ga.sinReferencia ? 'GA sin registrar' : `${ga.semanas}sem+${ga.dias}d`;
@@ -170,7 +200,7 @@ function pintarLista(){
     }).join('');
   }
   html += `<div style="padding:14px 18px"><span class="accesos-toggle" onclick="cerrarSesion()">Cerrar sesión ahora</span></div>`;
-  el.innerHTML = html;
+  el.innerHTML = barra + html;
 }
 
 async function verDetalle(i){
@@ -558,3 +588,4 @@ cargar();
 </script>
 </body>
 </html>
+
