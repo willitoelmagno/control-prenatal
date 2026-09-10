@@ -6,12 +6,12 @@
 <title>Panel Médico — Control Prenatal</title>
 <style>
   :root{
-    --rosa:#d16b96; --lila:#7c6ba8; --fondo:#f6f4fb; --card:#fff; --borde:#e6e0f0;
-    --texto:#2f2a3a; --ok:#3fa876; --alerta:#d9463c; --amarillo:#c98a1c; --muted:#8a8296;
+    --rosa:#3f7cac; --lila:#2f5f8a; --fondo:#eef4fa; --card:#fff; --borde:#d6e3f0;
+    --texto:#1f2d3a; --ok:#2f9e6f; --alerta:#d9463c; --amarillo:#c98a1c; --muted:#5f7385;
   }
   html[data-theme="dark"]{
-    --rosa:#e28ab0; --lila:#a596e0; --fondo:#1c1824; --card:#26212f; --borde:#3a3448;
-    --texto:#ece8f2; --ok:#5fce9a; --alerta:#ee7a70; --amarillo:#e0ab52; --muted:#a79fbb;
+    --rosa:#6fa8dc; --lila:#8fc0ea; --fondo:#141c26; --card:#1d2735; --borde:#2c3a4c;
+    --texto:#e7eef6; --ok:#5fce9a; --alerta:#ee7a70; --amarillo:#e0ab52; --muted:#93a5b8;
   }
   *{box-sizing:border-box;}
   body{margin:0; font-family:'Segoe UI',system-ui,sans-serif; background:var(--fondo); color:var(--texto);}
@@ -64,6 +64,61 @@
   .fecha-tabs button{flex:1; padding:7px 4px; border:1px solid var(--borde); background:var(--card); color:var(--texto); border-radius:8px; font-size:.8rem; cursor:pointer;}
   .fecha-tabs button.activo{background:var(--rosa); border-color:var(--rosa); color:#fff; font-weight:700;}
   .fecha-resumen{font-size:.72rem; color:var(--muted); margin-top:8px;}
+
+  /* ============ Buscador ============ */
+  .buscador{padding:10px 12px 0;}
+  .buscador input{width:100%; padding:9px 12px; border-radius:10px; border:1px solid var(--borde); background:var(--fondo); color:var(--texto); font-size:.85rem;}
+
+  /* ============ Resumen fijo (barra superior de la paciente) ============ */
+  .resumen-fijo{
+    position:sticky; top:0; z-index:3; background:var(--card); border-bottom:1px solid var(--borde);
+    padding:14px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin:-22px -28px 16px;
+  }
+  .resumen-fijo .nombre{font-size:1.1rem; font-weight:800;}
+  .resumen-fijo .ga-num{font-size:1.4rem; font-weight:800; color:var(--rosa);}
+  .resumen-fijo .sub{font-size:.74rem; color:var(--muted);}
+  .chip-alarma{padding:6px 14px; border-radius:999px; font-size:.78rem; font-weight:700; white-space:nowrap;}
+  .chip-alarma.si{background:#fbe4e2; color:var(--alerta);}
+  .chip-alarma.no{background:#dcf1e6; color:var(--ok);}
+
+  /* ============ Pendientes unificado ============ */
+  .pendientes-hoy{background:var(--card); border:1.5px solid var(--rosa); border-radius:16px; padding:16px 18px; margin-bottom:16px;}
+  .pendientes-hoy h3{margin:0 0 10px; font-size:.95rem; color:var(--lila);}
+  .pend-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;}
+  .pend-tile{background:var(--fondo); border-radius:12px; padding:10px 12px;}
+  .pend-tile .n{font-size:1.3rem; font-weight:800; color:var(--amarillo);}
+  .pend-tile .n.cero{color:var(--ok);}
+  .pend-tile .lbl{font-size:.72rem; color:var(--muted);}
+
+  /* ============ Tarjetas SOAP ============ */
+  .soap-header{display:flex; justify-content:space-between; align-items:center; margin:6px 0 10px;}
+  .soap-header h3{margin:0; font-size:1rem;}
+  .soap-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px;}
+  .soap-card{background:var(--card); border-radius:14px; padding:15px 17px; border-left:5px solid var(--c); border-top:1px solid var(--borde); border-right:1px solid var(--borde); border-bottom:1px solid var(--borde);}
+  .soap-card.s{--c:#3f7cac;} html[data-theme="dark"] .soap-card.s{--c:#6fa8dc;}
+  .soap-card.o{--c:#2f9e6f;} html[data-theme="dark"] .soap-card.o{--c:#5fce9a;}
+  .soap-card.a{--c:#c98a1c;} html[data-theme="dark"] .soap-card.a{--c:#e0ab52;}
+  .soap-card.p{--c:#a15fc9; grid-column:1/-1;} html[data-theme="dark"] .soap-card.p{--c:#c99ae0;}
+  .soap-card .letra{display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--c); color:#fff; font-weight:800; font-size:.8rem; margin-right:8px;}
+  .soap-card .titulo{font-weight:700; font-size:.9rem; vertical-align:middle;}
+  .soap-card p{font-size:.85rem; margin:8px 0 0; line-height:1.55;}
+  .soap-card ul{margin:8px 0 0; padding-left:20px; font-size:.85rem; line-height:1.6;}
+  .soap-card .subtitulo{font-size:.76rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; margin-top:12px;}
+  .soap-card .destacado{background:var(--fondo); border-radius:10px; padding:10px 12px; margin-top:10px; font-size:.83rem;}
+  .soap-card.quirurgico{border-left-color:var(--alerta);}
+  .soap-card.quirurgico .letra{background:var(--alerta);}
+  .pill-riesgo{display:inline-block; background:#fbe4e2; color:var(--alerta); font-size:.72rem; font-weight:700; padding:3px 10px; border-radius:999px; margin-top:6px;}
+  html[data-theme="dark"] .pill-riesgo{background:#3d2321;}
+
+  /* ============ switches doctor (cesárea / ligadura) ============ */
+  .switch-row{display:flex; justify-content:space-between; align-items:center; padding:7px 0; font-size:.85rem;}
+  .switch{position:relative; width:44px; height:24px; flex:none;}
+  .switch input{opacity:0; width:0; height:0;}
+  .switch .slider{position:absolute; inset:0; background:var(--borde); border-radius:30px; cursor:pointer; transition:.2s;}
+  .switch .slider:before{content:""; position:absolute; height:18px; width:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s;}
+  .switch input:checked + .slider{background:var(--rosa);}
+  .switch input:checked + .slider:before{transform:translateX(20px);}
+  .btn-outline{padding:8px 14px; border:1.5px dashed var(--rosa); background:transparent; color:var(--lila); border-radius:10px; font-size:.8rem; font-weight:700; cursor:pointer; margin-top:8px;}
 </style>
 </head>
 <body>
@@ -73,7 +128,11 @@
 </header>
 <div class="cfg" id="cfgWarn"></div>
 <div class="layout">
-  <div class="lista" id="lista"><div class="empty">Cargando pacientes…</div></div>
+  <div class="lista">
+    <div class="buscador"><input type="text" id="buscadorInput" oninput="cambiarFiltroTexto(this.value)" placeholder="🔍 Buscar por nombre o DNI..."></div>
+    <div id="fechaTabs"></div>
+    <div id="listaItems"><div class="empty">Cargando pacientes…</div></div>
+  </div>
   <div class="detalle" id="detalle"><div class="empty">Selecciona una paciente de la lista</div></div>
 </div>
 
@@ -82,6 +141,7 @@ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxQ-IDYNgKZ_Ox_5RLMm
 const SESION_HORAS = 8; // la clave se vuelve a pedir después de este tiempo de inactividad de sesión
 let consultas = [];
 let filtroFecha = 'hoy'; // 'hoy' | 'todas'
+let filtroTexto = '';
 
 // Especialidad sugerida según la condición médica registrada por la paciente.
 // Se muestra junto a la interconsulta para que sepas a qué especialista referirla.
@@ -170,24 +230,40 @@ function cambiarFiltroFecha(valor){
   pintarLista();
 }
 
-function pintarLista(){
-  const el = document.getElementById('lista');
-  const visibles = filtroFecha==='hoy' ? consultas.filter(c=>esHoy(c.timestamp)) : consultas;
+function cambiarFiltroTexto(valor){
+  filtroTexto = valor;
+  pintarListaItems(); // solo repinta los resultados, sin tocar el input (mantiene el foco al escribir)
+}
 
-  let barra = `
+function pasaFiltroTexto(c, texto){
+  if(!texto) return true;
+  const t = texto.trim().toLowerCase();
+  if(!t) return true;
+  return String(c.nombre||'').toLowerCase().includes(t) || String(c.dni||'').toLowerCase().includes(t);
+}
+
+function pintarLista(){
+  document.getElementById('fechaTabs').innerHTML = `
     <div class="fecha-bar">
       <div class="fecha-tabs">
         <button class="${filtroFecha==='hoy'?'activo':''}" onclick="cambiarFiltroFecha('hoy')">Hoy</button>
         <button class="${filtroFecha==='todas'?'activo':''}" onclick="cambiarFiltroFecha('todas')">Todas</button>
       </div>
-      <div class="fecha-resumen">${visibles.length} paciente${visibles.length===1?'':'s'} ${filtroFecha==='hoy' ? 'registrada'+(visibles.length===1?'':'s')+' hoy' : 'en total'}</div>
     </div>`;
+  pintarListaItems();
+}
 
-  let html = '';
+function pintarListaItems(){
+  const el = document.getElementById('listaItems');
+  const base = filtroFecha==='hoy' ? consultas.filter(c=>esHoy(c.timestamp)) : consultas;
+  const visibles = base.filter(c=>pasaFiltroTexto(c, filtroTexto));
+
+  let html = `<div class="fecha-resumen" style="padding:0 16px 8px">${visibles.length} paciente${visibles.length===1?'':'s'}${filtroTexto ? ' encontrada'+(visibles.length===1?'':'s') : (filtroFecha==='hoy' ? ' registrada'+(visibles.length===1?'':'s')+' hoy' : ' en total')}</div>`;
+
   if(!visibles.length){
-    html = `<div class="empty">${filtroFecha==='hoy' ? 'Aún no hay registros de hoy' : 'Aún no hay registros'}</div>`;
+    html += `<div class="empty">${filtroTexto ? 'Sin resultados para tu búsqueda' : (filtroFecha==='hoy' ? 'Aún no hay registros de hoy' : 'Aún no hay registros')}</div>`;
   } else {
-    html = visibles.map((c)=>{
+    html += visibles.map((c)=>{
       const i = consultas.indexOf(c);
       const alarma = tieneAlarma(c);
       const ga = calcularGAHoy(c);
@@ -200,7 +276,7 @@ function pintarLista(){
     }).join('');
   }
   html += `<div style="padding:14px 18px"><span class="accesos-toggle" onclick="cerrarSesion()">Cerrar sesión ahora</span></div>`;
-  el.innerHTML = barra + html;
+  el.innerHTML = html;
 }
 
 async function verDetalle(i){
@@ -209,25 +285,93 @@ async function verDetalle(i){
   const c = consultas[i];
   const ga = calcularGAHoy(c);
   const rec = generarRecomendaciones(ga, c);
-  const mensaje = generarMensaje(c, ga, rec);
+  const comp = generarComponentesSOAP(c, ga, rec);
+  const alarma = tieneAlarma(c);
   let condiciones = [];
   try{ condiciones = JSON.parse(c.condicionesJSON||'[]'); }catch(e){}
   let labs = [];
   try{ labs = JSON.parse(c.laboratoriosJSON||'[]'); }catch(e){}
 
-  document.getElementById('detalle').innerHTML = `
-    ${ga.sinReferencia ? `
-    <div class="top-ga">${c.nombre} <span style="font-size:.9rem;color:var(--muted)">— edad gestacional aún no registrada</span></div>
-    <div style="font-size:.85rem;color:var(--muted)">DNI: ${c.dni}</div>
-    ` : `
-    <div class="top-ga">${c.nombre} — ${ga.semanas} sem + ${ga.dias} d <span style="font-size:.9rem;color:var(--muted)">(al día de hoy)</span></div>
-    <div style="font-size:.85rem;color:var(--muted)">DNI: ${c.dni} · Ecografía de referencia: ${c.fechaEcoReferencia} (${c.semanasEcoReferencia} sem + ${c.diasEcoReferencia||0} d) · FPP: ${c.fpp || '—'}</div>
-    `}
+  const pendLabsN = ga.sinReferencia ? 0 : rec.labs.length;
+  const pendImgN = ga.sinReferencia ? 0 : rec.imagenes.filter(t=>t!=='Sin estudio de imagen pendiente por semana actual').length;
+  const pendVacN = rec.vacunas.filter(v=>!v.hecha).length;
+  const pendIntN = 3 + rec.interconsultasExtra.length + condiciones.filter(cd=>cd.estado==='pendiente').length;
 
-    <div class="box" style="margin-top:14px">
-      <h3>Edad gestacional de referencia</h3>
-      <p class="nota">Institucionalmente no se usa la FUM. Ingresa aquí la semana y día que tenía la paciente el día de la ecografía que consideres (habitualmente la del primer trimestre) — el sistema calcula la edad gestacional hacia adelante desde esa fecha, para esta y las próximas consultas.</p>
+  document.getElementById('detalle').innerHTML = `
+    <div class="resumen-fijo">
+      <div>
+        <div class="nombre">${c.nombre} <span style="font-weight:400;color:var(--muted);font-size:.8rem">DNI ${c.dni}</span></div>
+        <div class="sub">${ga.sinReferencia ? 'Edad gestacional aún no registrada' : `Eco de referencia: ${c.fechaEcoReferencia} (${c.semanasEcoReferencia} sem+${c.diasEcoReferencia||0}d) · FPP: ${c.fpp||'—'} · Próximo control: ${comp.proximoTxt}`}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px">
+        ${!ga.sinReferencia ? `<div style="text-align:right"><div class="ga-num">${ga.semanas}<span style="font-size:.85rem"> sem+${ga.dias}d</span></div><div class="sub">${comp.trimestreLabel}</div></div>` : ''}
+        <div class="chip-alarma ${alarma?'si':'no'}">${alarma?'⚠ Revisar síntomas':'✓ Sin alarma hoy'}</div>
+      </div>
+    </div>
+
+    <div class="pendientes-hoy">
+      <h3>📌 Pendientes de esta paciente</h3>
+      <div class="pend-grid">
+        <div class="pend-tile"><div class="n ${pendLabsN===0?'cero':''}">${pendLabsN}</div><div class="lbl">Laboratorios pendientes</div></div>
+        <div class="pend-tile"><div class="n ${pendImgN===0?'cero':''}">${pendImgN}</div><div class="lbl">Imágenes pendientes</div></div>
+        <div class="pend-tile"><div class="n ${pendVacN===0?'cero':''}">${pendVacN}</div><div class="lbl">Vacunas pendientes</div></div>
+        <div class="pend-tile"><div class="n">${pendIntN}</div><div class="lbl">Interconsultas</div></div>
+      </div>
+    </div>
+
+    <div class="pendientes-hoy" style="border-color:var(--lila)">
+      <h3>📐 Edad gestacional de referencia</h3>
+      <p class="nota" style="margin:0 0 8px">Institucionalmente no se usa la FUM. La fija el médico una sola vez (habitualmente con la ecografía del 1er trimestre) y el sistema calcula la GA hacia adelante en esta y en las próximas consultas.</p>
       <div id="formGA">${formularioReferenciaGA(c)}</div>
+    </div>
+
+    <div class="soap-header"><h3>📋 Nota clínica del control de hoy</h3><button class="btn" onclick="copiarNotaCompleta()">Copiar nota completa</button></div>
+    <textarea id="mensajeFinal" readonly style="position:absolute; left:-9999px; top:-9999px;">${textoSOAPCompleto(c, comp)}</textarea>
+    <div class="soap-grid">
+      <div class="soap-card s">
+        <span class="letra">S</span><span class="titulo">Subjetivo</span>
+        <p>${comp.sTxt}</p>
+        ${comp.labsSubjetivoTxt ? `<p>${comp.labsSubjetivoTxt}</p>` : ''}
+      </div>
+      <div class="soap-card o">
+        <span class="letra">O</span><span class="titulo">Objetivo</span>
+        <p>${comp.oTxt}</p>
+      </div>
+      <div class="soap-card a">
+        <span class="letra">A</span><span class="titulo">Análisis</span>
+        <p>${comp.aTxt}</p>
+        ${comp.riesgoPE ? `<div class="pill-riesgo">Riesgo de preeclampsia: ${comp.riesgoPE.join(', ')}</div>` : ''}
+      </div>
+      <div class="soap-card p">
+        <span class="letra">P</span><span class="titulo">Plan</span>
+        <p class="subtitulo">Adaptado a la semana actual</p>
+        <p>${comp.hitosTxt}</p>
+
+        <p class="subtitulo">Indicaciones</p>
+        <ul>${comp.indicaciones.map(t=>`<li>${t}</li>`).join('')}</ul>
+
+        <p class="subtitulo">Pendientes</p>
+        <ul>
+          <li>Labs: ${rec.labs.join('; ')}</li>
+          <li>Imágenes: ${rec.imagenes.join('; ')}</li>
+          <li>Vacunas: ${rec.vacunas.filter(v=>!v.hecha).map(v=>v.texto).join('; ') || 'al día'}</li>
+          <li>Interconsultas: Nutrición; Odontología; Psicología (tamizaje)${rec.interconsultasExtra.length ? '; '+rec.interconsultasExtra.join('; '):''}${condiciones.filter(cd=>cd.estado==='pendiente').length ? '; '+condiciones.filter(cd=>cd.estado==='pendiente').map(cd=>{const e=CONDICION_ESPECIALIDAD[cd.nombre]; return e?`${cd.nombre} → ${e}`:cd.nombre;}).join('; ') : ''}</li>
+        </ul>
+
+        ${comp.consejeriaTxt ? `<p class="subtitulo">Consejería</p><p>${comp.consejeriaTxt}</p>` : ''}
+
+        <p class="subtitulo">Educación a la paciente</p>
+        <p>${comp.educacionTxt}</p>
+
+        <p class="subtitulo">Próximo control</p>
+        <p>${comp.proximoTxt}</p>
+      </div>
+
+      ${comp.quirurgicoAplica ? `
+      <div class="soap-card p quirurgico">
+        <span class="letra">🩺</span><span class="titulo">Preparación quirúrgica (cesárea, desde semana 32)</span>
+        <ul>${comp.quirurgico.map(v=>`<li>${v}</li>`).join('')}</ul>
+      </div>` : ''}
     </div>
 
     <div class="grid">
@@ -265,55 +409,96 @@ async function verDetalle(i){
       </div>
 
       <div class="box">
-        <h3>Vacunas recomendadas (esquema MINSA + evidencia reciente)</h3>
-        <ul>${rec.vacunas.map(v=>`<li class="${v.hecha?'hecho':'pendiente'}">${v.texto}</li>`).join('')}</ul>
-      </div>
-
-      <div class="box">
-        <h3>Laboratorios pendientes (según semana, norma MINSA-CPN)</h3>
-        <ul>${rec.labs.map(v=>`<li class="pendiente">${v}</li>`).join('')}</ul>
-      </div>
-
-      <div class="box">
-        <h3>Estudios de imagen pendientes</h3>
-        <ul>${rec.imagenes.map(v=>`<li class="pendiente">${v}</li>`).join('')}</ul>
-      </div>
-
-      <div class="box">
-        <h3>Interconsultas</h3>
-        <div class="cond-row"><span>Nutrición</span><span class="nota">de rutina</span></div>
-        <div class="cond-row"><span>Odontología</span><span class="nota">de rutina</span></div>
-        <div class="cond-row"><span>Psicología (tamizaje)</span><span class="nota">de rutina</span></div>
-        ${condiciones.map((cond,idx)=>{
-          const especialidad = CONDICION_ESPECIALIDAD[cond.nombre];
-          return `
-          <div class="cond-row">
-            <span>${cond.nombre}${especialidad ? ` <span class="nota">→ Interconsulta a ${especialidad}</span>` : ''}</span>
-            <select class="estado" onchange="cambiarEstadoCondicion('${c.dni}', ${idx}, this.value)">
-              <option value="pendiente" ${cond.estado==='pendiente'?'selected':''}>Pendiente</option>
-              <option value="en_seguimiento" ${cond.estado==='en_seguimiento'?'selected':''}>En seguimiento</option>
-              <option value="atendido" ${cond.estado==='atendido'?'selected':''}>Atendido</option>
-            </select>
-          </div>`;
-        }).join('')}
-        ${rec.interconsultasExtra.map(v=>`<div class="cond-row"><span>${v}</span></div>`).join('')}
-      </div>
-
-      ${c.cesareaPrevia==='si' ? `
-      <div class="box" style="grid-column:1/-1">
-        <h3>Preparación quirúrgica (cesárea previa / programada)</h3>
-        <ul>${rec.quirurgico.map(v=>`<li class="pendiente">${v}</li>`).join('')}</ul>
-      </div>` : ''}
-
-      <div class="box" style="grid-column:1/-1">
-        <h3>📋 Mensaje para copiar y pegar en la receta / indicaciones</h3>
-        <textarea id="mensajeFinal" readonly>${mensaje}</textarea>
-        <button class="btn" onclick="copiarMensaje()">Copiar mensaje</button>
+        <h3>Antecedentes y condiciones</h3>
+        <div class="switch-row">
+          <span>Cesárea previa / programada</span>
+          <label class="switch"><input type="checkbox" ${c.cesareaPrevia==='si'?'checked':''} onchange="actualizarDatosMedico('${c.dni}', this.checked, undefined)"><span class="slider"></span></label>
+        </div>
+        <div class="switch-row">
+          <span>Paciente desea ligadura tubaria</span>
+          <label class="switch"><input type="checkbox" ${c.deseaLigadura==='si'?'checked':''} onchange="actualizarDatosMedico('${c.dni}', undefined, this.checked)"><span class="slider"></span></label>
+        </div>
+        <div style="margin-top:10px">
+          <div class="cond-row"><span>Nutrición</span><span class="nota">de rutina</span></div>
+          <div class="cond-row"><span>Odontología</span><span class="nota">de rutina</span></div>
+          <div class="cond-row"><span>Psicología (tamizaje)</span><span class="nota">de rutina</span></div>
+          ${condiciones.map((cond,idx)=>{
+            const especialidad = CONDICION_ESPECIALIDAD[cond.nombre];
+            return `
+            <div class="cond-row">
+              <span>${cond.nombre}${especialidad ? ` <span class="nota">→ Interconsulta a ${especialidad}</span>` : ''}</span>
+              <select class="estado" onchange="cambiarEstadoCondicion('${c.dni}', ${idx}, this.value)">
+                <option value="pendiente" ${cond.estado==='pendiente'?'selected':''}>Pendiente</option>
+                <option value="en_seguimiento" ${cond.estado==='en_seguimiento'?'selected':''}>En seguimiento</option>
+                <option value="atendido" ${cond.estado==='atendido'?'selected':''}>Atendido</option>
+              </select>
+            </div>`;
+          }).join('')}
+          ${rec.interconsultasExtra.map(v=>`<div class="cond-row"><span>${v}</span></div>`).join('')}
+        </div>
+        <button class="btn-outline" onclick="agregarCondicion('${c.dni}')">+ Agregar condición detectada hoy</button>
       </div>
     </div>
   `;
 
   cargarCurvas(c.dni);
+}
+
+/* ============ El médico agrega una condición/patología detectada en consulta ============ */
+function agregarCondicion(dni){
+  const opciones = Object.keys(CONDICION_ESPECIALIDAD);
+  const listaTxt = opciones.map((o,idx)=>`${idx+1}. ${o}`).join('\n');
+  const seleccion = prompt(`¿Qué condición detectaste hoy? Escribe el número de la lista, o escribe el nombre si no está listada:\n\n${listaTxt}`);
+  if(!seleccion) return;
+  const idx = parseInt(seleccion, 10);
+  const nombre = (!isNaN(idx) && opciones[idx-1]) ? opciones[idx-1] : seleccion.trim();
+  if(!nombre) return;
+
+  const c = consultas.find(x=>String(x.dni)===String(dni));
+  if(!c) return;
+  let condiciones = [];
+  try{ condiciones = JSON.parse(c.condicionesJSON||'[]'); }catch(e){}
+  condiciones.push({ nombre, estado:'pendiente' });
+  const nuevoJSON = JSON.stringify(condiciones);
+  c.condicionesJSON = nuevoJSON;
+
+  (async()=>{
+    let sesion = null;
+    try{ sesion = JSON.parse(localStorage.getItem('sesionDoctor')||'null'); }catch(e){}
+    const clave = sesion ? sesion.clave : '';
+    try{
+      await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({accion:'actualizarCondiciones', clave, dni, condiciones: nuevoJSON})});
+    }catch(e){ /* si falla, se puede reintentar; queda en memoria por ahora */ }
+    const i = consultas.indexOf(c);
+    if(i>=0) verDetalle(i);
+  })();
+}
+
+/* ============ El médico marca cesárea previa/programada y/o deseo de ligadura ============ */
+async function actualizarDatosMedico(dni, cesareaChecked, ligaduraChecked){
+  const c = consultas.find(x=>String(x.dni)===String(dni));
+  if(!c) return;
+  const cesareaPrevia = cesareaChecked!==undefined ? (cesareaChecked?'si':'no') : (c.cesareaPrevia||'no');
+  const deseaLigadura = ligaduraChecked!==undefined ? (ligaduraChecked?'si':'no') : (c.deseaLigadura||'no');
+  c.cesareaPrevia = cesareaPrevia;
+  c.deseaLigadura = deseaLigadura;
+  consultas.forEach(x=>{ if(String(x.dni)===String(dni)){ x.cesareaPrevia = cesareaPrevia; x.deseaLigadura = deseaLigadura; } });
+
+  let sesion = null;
+  try{ sesion = JSON.parse(localStorage.getItem('sesionDoctor')||'null'); }catch(e){}
+  const clave = sesion ? sesion.clave : '';
+  try{
+    await fetch(WEBAPP_URL, {method:'POST', body: JSON.stringify({accion:'actualizarDatosMedico', clave, dni, cesareaPrevia, deseaLigadura})});
+  }catch(e){ /* si falla, queda en memoria y se puede reintentar */ }
+  const i = consultas.indexOf(c);
+  if(i>=0) verDetalle(i);
+}
+
+function copiarNotaCompleta(){
+  const ta = document.getElementById('mensajeFinal');
+  ta.select();
+  document.execCommand('copy');
+  alert('Nota copiada ✓');
 }
 
 function formularioReferenciaGA(c){
@@ -465,8 +650,7 @@ function generarRecomendaciones(ga, c){
   if(ga.sinReferencia){
     return {
       vacunas: [], labs: ['Registra primero la edad gestacional de referencia arriba'],
-      imagenes: [], interconsultasExtra: [],
-      quirurgico: ['Perfil preoperatorio: hemograma, grupo y factor, PT/TTPA, glucosa, urea, creatinina','VIH, HBsAg (si no vigentes)','Riesgo quirúrgico / evaluación cardiológica','Reserva de sangre (coordinar con banco de sangre)','Programar fecha de cesárea (idealmente 38-39 sem)']
+      imagenes: [], interconsultasExtra: [], quirurgico: [], quirurgicoAplica: false
     };
   }
   const s = ga.semanas;
@@ -509,15 +693,23 @@ function generarRecomendaciones(ga, c){
   const interconsultasExtra = [];
   if(s >= 34 && c.cesareaPrevia==='si') interconsultasExtra.push('Evaluación pre-anestésica (36 sem aprox.)');
 
+  // Bloque quirúrgico: se activa desde la semana 32 si hay cesárea previa/programada.
+  // Orden pensado para no saltarse pasos: riesgo → preoperatorios → depósito de
+  // sangre → pre-anestesia → consentimiento de ligadura (si aplica, con
+  // anticipación) → fecha de cesárea.
+  const quirurgicoAplica = s >= 32 && c.cesareaPrevia === 'si';
   const quirurgico = [
-    'Perfil preoperatorio: hemograma, grupo y factor, PT/TTPA, glucosa, urea, creatinina',
-    'VIH, HBsAg (si no vigentes)',
-    'Riesgo quirúrgico / evaluación cardiológica',
-    'Reserva de sangre (coordinar con banco de sangre)',
-    'Programar fecha de cesárea (idealmente 38-39 sem)'
+    '1. Riesgo quirúrgico: evaluación cardiológica / Medicina Interna preoperatoria',
+    '2. Exámenes preoperatorios: hemograma, grupo y factor Rh, PT/TTPA, glucosa, urea, creatinina, VIH, HBsAg (si no vigentes)',
+    '3. Orden de depósito de sangre: coordinar reserva con banco de sangre',
+    '4. Evaluación pre-anestésica (~36 sem)'
   ];
+  if(c.deseaLigadura === 'si'){
+    quirurgico.push('5. Consentimiento informado de ligadura tubaria: FIRMAR CON ANTICIPACIÓN, nunca el mismo día de la cirugía');
+  }
+  quirurgico.push((c.deseaLigadura==='si' ? '6' : '5') + '. Programar fecha de cesárea (idealmente 38-39 sem)');
 
-  return { vacunas, labs, imagenes, interconsultasExtra, quirurgico };
+  return { vacunas, labs, imagenes, interconsultasExtra, quirurgico, quirurgicoAplica };
 }
 
 function tieneRiesgoPreeclampsia(c){
@@ -526,62 +718,148 @@ function tieneRiesgoPreeclampsia(c){
   return riesgo.length > 0 ? riesgo : null;
 }
 
-function generarMensaje(c, ga, rec){
-  const alarmaTxt = tieneAlarma(c)
-    ? '⚠️ La paciente refiere síntomas que requieren evaluación — revisar antes de continuar el plan.'
-    : 'Sin síntomas de alarma reportados hoy.';
-
-  const riesgoPE = tieneRiesgoPreeclampsia(c);
-  const asaTxt = riesgoPE && ga.semanas < 37
-    ? `\n- Ácido acetilsalicílico (aspirina) 150 mg VO, una vez al día por la noche, iniciar idealmente antes de las 16 semanas (hasta las 20 sem si no se inició antes) y continuar hasta las 36-37 semanas — indicado por factor(es) de riesgo de preeclampsia: ${riesgoPE.join(', ')}. Confirmar indicación según criterio clínico.`
-    : '';
+function generarComponentesSOAP(c, ga, rec){
+  const s = ga.semanas;
+  const trimestre = ga.sinReferencia ? null : (s < 14 ? 1 : s < 28 ? 2 : 3);
+  const trimestreLabel = trimestre===1 ? '1er trimestre' : trimestre===2 ? '2do trimestre' : trimestre===3 ? '3er trimestre' : 'sin GA de referencia';
 
   let condiciones = [];
   try{ condiciones = JSON.parse(c.condicionesJSON||'[]'); }catch(e){}
+  let labsReferidos = [];
+  try{ labsReferidos = JSON.parse(c.laboratoriosJSON||'[]'); }catch(e){}
+  const riesgoPE = tieneRiesgoPreeclampsia(c);
+  const alarma = tieneAlarma(c);
+
+  /* ---- S ---- */
+  const sintomasPositivos = [];
+  if(c.sangrado==='si') sintomasPositivos.push('sangrado vaginal');
+  if(c.perdidaLiquido==='si') sintomasPositivos.push('pérdida de líquido');
+  if(c.cefalea==='si') sintomasPositivos.push('cefalea');
+  if(c.visionBorrosa==='si') sintomasPositivos.push('visión borrosa');
+  if(c.dolorEpigastrico==='si') sintomasPositivos.push('dolor epigástrico');
+  if(c.tinnitus==='si') sintomasPositivos.push('tinnitus');
+  if(c.escotomas==='si') sintomasPositivos.push('escotomas');
+  if(c.movimientosFetales==='no') sintomasPositivos.push('disminución de movimientos fetales');
+  if(c.otroSintoma) sintomasPositivos.push(c.otroSintoma.toLowerCase());
+
+  const sTxt = sintomasPositivos.length
+    ? `Paciente refiere: ${sintomasPositivos.join(', ')}. Requiere evaluación dirigida antes de continuar el plan.`
+    : 'Paciente asintomática. Niega sangrado vaginal, pérdida de líquido, cefalea, visión borrosa, dolor epigástrico, tinnitus, escotomas; refiere percepción normal de movimientos fetales.';
+  const labsSubjetivoTxt = labsReferidos.length
+    ? `Refiere exámenes previos: ${labsReferidos.map(l=>`${l.examen}${l.fecha?` (${l.fecha})`:''}`).join(', ')}.`
+    : '';
+
+  /* ---- O ---- */
+  const gaObjTxt = ga.sinReferencia
+    ? 'Edad gestacional: pendiente de registrar (falta ecografía de referencia).'
+    : `Edad gestacional actual: ${ga.semanas} sem + ${ga.dias} d (${trimestreLabel}) — ecografía de referencia ${c.fechaEcoReferencia} (${c.semanasEcoReferencia} sem + ${c.diasEcoReferencia||0} d) · FPP: ${c.fpp || '—'}.`;
+  const ecoTxt = [
+    c.ecoGenetica==='si' ? 'ecografía genética/TN realizada' : null,
+    c.ecoMorfologica==='si' ? 'ecografía morfológica realizada' : null,
+    c.ecoPrevia==='si' ? 'otra ecografía previa realizada' : null
+  ].filter(Boolean).join('; ') || 'sin ecografías institucionales registradas aún';
+  const oTxt = `${gaObjTxt} Peso: ${c.peso || '—'} kg · Presión arterial: ${c.presionSistolica || '—'}/${c.presionDiastolica || '—'} mmHg. Ecografías: ${ecoTxt}.${c.ecoObservaciones ? ` Obs.: ${c.ecoObservaciones}.` : ''}`;
+
+  /* ---- A ---- */
+  const gestaTxt = ga.sinReferencia
+    ? 'Gestante con edad gestacional aún no determinada en el sistema.'
+    : `Gestante de ${ga.semanas} sem + ${ga.dias} d (${trimestreLabel}), evolución ${alarma ? 'con síntomas de alarma a evaluar' : 'aparentemente favorable, sin signos de alarma en el día'}.`;
   const condTxt = condiciones.length
     ? condiciones.map(cd=>{
         const especialidad = CONDICION_ESPECIALIDAD[cd.nombre];
-        const estadoTxt = cd.estado==='pendiente'?'interconsulta pendiente':cd.estado==='en_seguimiento'?'en seguimiento':'atendido';
+        const estadoTxt = cd.estado==='pendiente'?'interconsulta pendiente':cd.estado==='en_seguimiento'?'en seguimiento':'atendida';
         return `${cd.nombre}${especialidad?` (${especialidad})`:''} — ${estadoTxt}`;
       }).join('; ')
-    : 'ninguna registrada';
+    : 'sin comorbilidades ni condiciones registradas';
+  const riesgoTxt = riesgoPE
+    ? `Riesgo de preeclampsia presente: ${riesgoPE.join(', ')}.`
+    : 'Sin factores de riesgo de preeclampsia registrados.';
+  const aTxt = `${gestaTxt} Comorbilidades/condiciones: ${condTxt}. ${riesgoTxt}`;
 
-  const gaTxt = ga.sinReferencia
-    ? 'Edad gestacional: pendiente de registrar (falta la ecografía de referencia)'
-    : `Edad gestacional: ${ga.semanas} semanas + ${ga.dias} días (ecografía de referencia: ${c.fechaEcoReferencia} · FPP: ${c.fpp || '—'})`;
+  /* ---- P ---- */
+  const asaTxt = riesgoPE && !ga.sinReferencia && ga.semanas < 37
+    ? 'Ácido acetilsalicílico (aspirina) 150 mg VO por las noches, todos los días (protocolo ASPRE por riesgo de preeclampsia) — hasta la semana 36-37. No suspender salvo indicación médica.'
+    : null;
+  const folatoTxt = !ga.sinReferencia && ga.semanas >= 14
+    ? 'Ácido fólico 1 tableta VO cada 24 horas (mantener; dosis de mayor impacto ya cubierta en el 1er trimestre).'
+    : 'Ácido fólico 1 tableta VO cada 24 horas (prioritario en el 1er trimestre, para prevención de defectos del tubo neural).';
 
-  return `CONTROL PRENATAL — ${c.nombre} (DNI ${c.dni})
-${gaTxt}
-Peso: ${c.peso || '—'} kg · PA: ${c.presionSistolica || '—'}/${c.presionDiastolica || '—'} mmHg
-${alarmaTxt}
+  const indicaciones = [
+    'Sulfato ferroso (comprimido 300 mg / 60 mg de hierro elemental): 1 comprimido VO cada 24 horas, alejado de las comidas (1 h antes o 2 h después), con jugo cítrico para mejorar la absorción; evitar junto con lácteos o café.',
+    folatoTxt,
+    'Calcio carbonato 600 mg: 1 comprimido VO cada 24 horas, de preferencia por la noche, separado del sulfato ferroso por al menos 2 horas.',
+    'Metildopa 250 mg VO cada 8 horas (solo si hipertensión indicada por su médico).'
+  ];
+  if(asaTxt) indicaciones.push(asaTxt);
 
-INDICACIONES:
-- Sulfato ferroso 1 tableta VO, 1 hora antes o 2 horas después de las comidas, idealmente con cítricos.
-- Ácido fólico 1 tableta VO cada 24 horas (prioritario en primer trimestre).
-- Calcio 1 tableta VO cada 24 horas.
-- Metildopa 250mg VO cada 8 horas (solo si hipertensión indicada por su médico).${asaTxt}
+  function hitosSemana(sem){
+    if(sem < 11) return 'Confirmación de embarazo, inicio de suplementación con ácido fólico, solicitud de exámenes basales de 1er trimestre.';
+    if(sem < 14) return 'Ventana para ecografía genética/translucencia nucal (11-14 sem) y tamizaje combinado de aneuploidías si está disponible.';
+    if(sem < 20) return 'Control de síntomas de 1er trimestre (náuseas, fatiga); reforzar adherencia a suplementos.';
+    if(sem < 24) return 'Ventana para ecografía morfológica (20-24 sem); momento clave para descartar malformaciones estructurales.';
+    if(sem < 28) return 'Tamizaje de diabetes gestacional con PTOG 75g (24-28 sem); iniciar vigilancia estrecha de PA si hay riesgo de preeclampsia.';
+    if(sem < 32) return 'Control de crecimiento fetal (ecografía 28-32 sem); reforzar signos de alarma de preeclampsia y trabajo de parto pretérmino.';
+    if(sem < 34) return 'Vigilar presentación fetal; evaluar necesidad de Doppler/perfil biofísico si hay factores de riesgo.';
+    if(sem < 36) return 'Ventana para vacuna de VRS (si disponible) y refuerzo Tdap si no se colocó antes; se acerca el cultivo rectovaginal para Estreptococo del grupo B (35-37 sem).';
+    if(sem < 37) return 'Cultivo rectovaginal para Estreptococo del grupo B (35-37 sem); definir vía de parto si hay indicación quirúrgica.';
+    if(sem < 39) return 'Embarazo a término temprano: vigilancia semanal, evaluar bienestar fetal, revisar plan de parto.';
+    if(sem < 41) return 'Embarazo a término: vigilancia semanal estrecha, evaluar signos de trabajo de parto.';
+    return 'Embarazo en vías de prolongación (≥41 sem): referir para evaluación de bienestar fetal y probable inducción, según protocolo institucional.';
+  }
+  const hitosTxt = ga.sinReferencia ? 'Registra la edad gestacional de referencia para ver los hitos de la semana actual.' : hitosSemana(ga.semanas);
 
-CONDICIONES / INTERCONSULTAS EN SEGUIMIENTO: ${condTxt}
+  const consejeriaTxt = ga.sinReferencia ? '' : (trimestre===1
+    ? 'Consejería 1er trimestre: alimentación fraccionada para náuseas, evitar automedicación, actividad física ligera si no hay contraindicación, evitar tabaco/alcohol.'
+    : trimestre===2
+    ? 'Consejería 2do trimestre: dieta rica en hierro y calcio, actividad física moderada (caminatas), curso de preparación para el parto, vigilar movimientos fetales desde ~20 sem.'
+    : 'Consejería 3er trimestre: reconocer signos de trabajo de parto, plan de parto y de traslado, conteo de movimientos fetales diario, posición para dormir (decúbito lateral izquierdo).');
 
-PENDIENTES:
-- Laboratorios: ${rec.labs.join('; ')}
-- Imágenes: ${rec.imagenes.join('; ')}
-- Interconsultas de rutina: Nutrición; Odontología; Psicología (tamizaje)${rec.interconsultasExtra.length ? '; '+rec.interconsultasExtra.join('; '):''}
-- Vacunas: ${rec.vacunas.filter(v=>!v.hecha).map(v=>v.texto).join('; ') || 'al día'}
+  const pendientesTxt = [
+    `Labs: ${rec.labs.join('; ')}`,
+    `Imágenes: ${rec.imagenes.join('; ')}`,
+    `Vacunas: ${rec.vacunas.filter(v=>!v.hecha).map(v=>v.texto).join('; ') || 'al día'}`,
+    `Interconsultas: Nutrición; Odontología; Psicología (tamizaje)${rec.interconsultasExtra.length ? '; '+rec.interconsultasExtra.join('; '):''}${condiciones.filter(cd=>cd.estado==='pendiente').length ? '; '+condiciones.filter(cd=>cd.estado==='pendiente').map(cd=>{const e=CONDICION_ESPECIALIDAD[cd.nombre]; return e?`${cd.nombre} → ${e}`:cd.nombre;}).join('; ') : ''}`
+  ];
 
-SIGNOS DE ALARMA — acudir a Emergencia de inmediato si presenta:
-Sangrado vaginal, pérdida de líquido, disminución de movimientos fetales, dolor de cabeza intenso,
-visión borrosa, dolor en la boca del estómago, zumbido de oídos o convulsiones.
+  const educacionTxt = `Se le explicó a la paciente, en lenguaje claro, que debe acudir de inmediato a Emergencia si presenta: sangrado vaginal, pérdida de líquido por genitales, disminución o ausencia de movimientos fetales, dolor de cabeza intenso que no cede con analgesia habitual, visión borrosa o puntos de luz, dolor fuerte en la boca del estómago, zumbido de oídos o convulsiones.${alarma ? ' Dado que hoy refiere síntomas de alarma, se hizo énfasis adicional en no esperar al siguiente control si estos persisten o empeoran.' : ''} La paciente comprendió las indicaciones, el plan de exámenes pendientes y los signos de alarma, y aceptó continuar con el seguimiento de su embarazo.`;
 
-La paciente refiere haber comprendido el plan de trabajo, sus pendientes y los signos de alarma,
-y acepta continuar con el seguimiento del embarazo.`;
+  const proximoTxt = ga.sinReferencia ? 'A definir (registrar GA de referencia primero).' : (ga.semanas < 28 ? 'En 4 semanas.' : ga.semanas < 36 ? 'En 2 semanas.' : 'En 1 semana.');
+
+  return {
+    ga, trimestreLabel, sTxt, labsSubjetivoTxt, oTxt, aTxt, riesgoPE, condTxt,
+    indicaciones, hitosTxt, consejeriaTxt, pendientesTxt, educacionTxt, proximoTxt,
+    quirurgico: rec.quirurgico, quirurgicoAplica: rec.quirurgicoAplica, alarma
+  };
 }
 
-function copiarMensaje(){
-  const ta = document.getElementById('mensajeFinal');
-  ta.select();
-  document.execCommand('copy');
-  alert('Mensaje copiado ✓');
+function textoSOAPCompleto(c, comp){
+  return `CONTROL PRENATAL — NOTA SOAP
+${c.nombre} (DNI ${c.dni}) · ${new Date().toLocaleDateString('es-PE')}
+
+S — SUBJETIVO
+${comp.sTxt}${comp.labsSubjetivoTxt ? '\n'+comp.labsSubjetivoTxt : ''}
+
+O — OBJETIVO
+${comp.oTxt}
+
+A — ANÁLISIS
+${comp.aTxt}
+
+P — PLAN
+RESUMEN SEGÚN SEMANA ACTUAL: ${comp.hitosTxt}
+
+INDICACIONES:
+${comp.indicaciones.map(i=>'- '+i).join('\n')}
+
+PENDIENTES:
+${comp.pendientesTxt.map(p=>'- '+p).join('\n')}
+${comp.quirurgicoAplica ? '\nPREPARACIÓN QUIRÚRGICA (cesárea, desde sem. 32):\n'+comp.quirurgico.map(v=>'- '+v).join('\n') : ''}
+${comp.consejeriaTxt ? '\n'+comp.consejeriaTxt : ''}
+
+EDUCACIÓN A LA PACIENTE:
+${comp.educacionTxt}
+
+PRÓXIMO CONTROL: ${comp.proximoTxt}`;
 }
 
 cargar();
